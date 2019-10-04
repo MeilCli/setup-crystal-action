@@ -52,12 +52,13 @@ jobs:
       matrix:
         os: [ubuntu-16.04, ubuntu-18.04, macOS-10.14]
         crystal: [0.31.0, 0.31.1, latest]
-        shards: [v0.8.1, v0.9.0, latest]
+        shards: [0.8.1, 0.9.0, latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: MeilCli/setup-crystal-action@master
         with: 
           crystal_version: ${{ matrix.crystal }}
+          shards_version: ${{ matrix.shards }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: MeilCli/test-command-action@v1
         if: matrix.crystal != 'latest'
