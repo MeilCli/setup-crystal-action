@@ -5,32 +5,59 @@ import * as octkit from "@actions/github";
 import * as os from "os";
 import * as path from "path";
 import { Option } from "./main";
-import { ReposGetReleaseByTagResponseAssetsItem } from "@octokit/rest";
+import {
+    Response,
+    ReposGetReleaseByTagResponse,
+    ReposGetLatestReleaseResponse,
+    ReposGetReleaseByTagResponseAssetsItem,
+    ReposGetLatestReleaseResponseAssetsItem
+} from "@octokit/rest";
 
 const platform: string = os.platform();
 
 async function getInstallAsset(
     option: Option
-): Promise<ReposGetReleaseByTagResponseAssetsItem> {
+): Promise<
+    | ReposGetReleaseByTagResponseAssetsItem
+    | ReposGetLatestReleaseResponseAssetsItem
+> {
     const github = new octkit.GitHub(option.githubToken);
-    const response = await github.repos.getReleaseByTag({
-        owner: "crystal-lang",
-        repo: "crystal",
-        tag: option.crystalVersion
-    });
+    let response: Response<
+        ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse
+    >;
+    if (option.crystalVersion != "latest") {
+        response = await github.repos.getReleaseByTag({
+            owner: "crystal-lang",
+            repo: "crystal",
+            tag: option.crystalVersion
+        });
+    } else {
+        response = await github.repos.getLatestRelease({
+            owner: "crystal-lang",
+            repo: "crystal"
+        });
+    }
 
     if (400 <= response.status) {
         throw Error("fail get crystal releases");
     }
 
-    const fileUrls = response.data.assets.filter(x => {
+    const assets: Array<
+        | ReposGetReleaseByTagResponseAssetsItem
+        | ReposGetLatestReleaseResponseAssetsItem
+    > = [];
+
+    for (const asset of assets) {
+        assets.push(asset);
+    }
+
+    const fileUrls = assets.filter(x => {
         if (platform == "darwin") {
             return x.name.endsWith("-darwin-x86_64.tar.gz");
         } else {
             return x.name.endsWith("-linux-x86_64.tar.gz");
         }
     });
-
     const fileUrl = fileUrls.sort()[fileUrls.length - 1];
 
     return fileUrl;

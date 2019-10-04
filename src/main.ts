@@ -4,16 +4,13 @@ import { installShards } from "./setup_shards";
 
 export interface Option {
     crystalVersion: string;
-    shardsVersion: string | null;
+    shardsVersion: string;
     githubToken: string;
 }
 
 function getOption(): Option {
     const crystalVersion = core.getInput("crystal_version", { required: true });
-    let shardsVersion: string | null = core.getInput("shards_version");
-    if (shardsVersion.length == 0) {
-        shardsVersion = null;
-    }
+    const shardsVersion = core.getInput("shards_version", { required: true });
     const githubToken = core.getInput("github_token", { required: true });
     return {
         crystalVersion: crystalVersion,
@@ -26,7 +23,9 @@ async function run() {
     try {
         const option = getOption();
         await installCrystal(option);
-        await installShards(option);
+        if (option.shardsVersion != "skip") {
+            await installShards(option);
+        }
     } catch (error) {
         core.setFailed(error.message);
     }

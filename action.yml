@@ -6,11 +6,13 @@ branding:
   color: blue
 inputs:
   crystal_version:
-    description: 'install crystal version'
+    description: 'install crystal version, will install latest version if no-value'
     required: true
-    default: "0.31.1"
+    default: "latest"
   shards_version:
-    description: 'install shards version, will install compiler-including or latest version if no-value'
+    description: 'install shards version, will install latest version if no-value'
+    required: true
+    default: "latest"
   github_token:
     description: 'github token, using get GitHub Release of crystal-lang/crystal or crystal-lang/shards'
     required: true
