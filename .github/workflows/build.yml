@@ -63,7 +63,7 @@ jobs:
         name: Check Crystal Version
         with:
           command: crystal version
-          expect: '.+?Crystal\\s${{ matrix.crystal }}.+?'
+          expect: '.+?Crystal\s${{ matrix.crystal }}.+?'
       - run: |
           shards --version
           echo 'puts "Hello Crystal"' > hello.cr
