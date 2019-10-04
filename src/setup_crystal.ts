@@ -38,7 +38,7 @@ async function getInstallAsset(
 
 async function installNeedSoftware() {
     if (platform == "linux") {
-        await exec.exec("apt-get install libevent-dev", undefined);
+        await exec.exec("sudo apt-get install libevent-dev", undefined);
     }
 }
 
