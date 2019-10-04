@@ -20,7 +20,7 @@ jobs:
       run: |
         npm install
         npm run build
-        npm run test --passWithNoTests
+        npm run test
       env:
         CI: true
   danger:
@@ -60,5 +60,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           crystal version
+          shards --version
           echo 'puts "Hello Crystal"' > hello.cr
           crystal run hello.cr
