@@ -62,7 +62,7 @@ jobs:
         name: Check Crystal Version
         with:
           command: crystal version
-          expect_contain: 'Crystal {{ matrix.crystal }}'
+          expect_contain: 'Crystal ${{ matrix.crystal }}'
       - run: |
           shards --version
           echo 'puts "Hello Crystal"' > hello.cr
