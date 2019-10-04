@@ -60,6 +60,8 @@ export async function installShards(option: Option) {
 
     const installAsset = await getInstallAsset(option);
 
+    await installNeedSoftware();
+
     let toolPath = tc.find("shards", installAsset.tag_name);
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
@@ -80,8 +82,6 @@ export async function installShards(option: Option) {
 
     const binPath = path.join(toolPath, "bin");
     core.addPath(binPath);
-
-    await installNeedSoftware();
 
     core.setOutput("installed_shards_json", JSON.stringify(installAsset));
 }
