@@ -76,6 +76,16 @@ export function toVersion(name: string): string {
         .replace("-linux-x86_64.tar.gz", "");
 }
 
+function getChildFolder(
+    asset:
+        | ReposGetReleaseByTagResponseAssetsItem
+        | ReposGetLatestReleaseResponseAssetsItem
+): string {
+    return asset.name
+        .replace("-darwin-x86_64.tar.gz", "")
+        .replace("-linux-x86_64.tar.gz", "");
+}
+
 export async function installCrystal(option: Option) {
     if (platform == "win32") {
         throw Error("setup crystal action not support windows");
@@ -95,7 +105,7 @@ export async function installCrystal(option: Option) {
 
     // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
-    const binPath = path.join(toolPath, version, "bin");
+    const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
     core.addPath(binPath);
 
     await installNeedSoftware();
