@@ -1,4 +1,5 @@
 import * as core from "@actions/core";
+import * as exec from "@actions/exec";
 import * as tc from "@actions/tool-cache";
 import * as octkit from "@actions/github";
 import * as os from "os";
@@ -35,6 +36,12 @@ async function getInstallAsset(
     return fileUrl;
 }
 
+async function installNeedSoftware() {
+    if (platform == "linux") {
+        await exec.exec("apt-get install libevent-dev", undefined);
+    }
+}
+
 export async function installCrystal(option: Option) {
     if (platform == "win32") {
         throw Error("setup crystal action not support windows");
@@ -58,6 +65,8 @@ export async function installCrystal(option: Option) {
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(toolPath, version, "bin");
     core.addPath(binPath);
+
+    await installNeedSoftware();
 
     core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
 }
