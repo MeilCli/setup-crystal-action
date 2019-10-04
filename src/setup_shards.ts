@@ -78,7 +78,7 @@ export async function installShards(option: Option) {
         );
     }
 
-    const binPath = path.join(toolPath, "bin", "shards");
+    const binPath = path.join(toolPath, "bin");
     core.addPath(binPath);
 
     await installNeedSoftware();
