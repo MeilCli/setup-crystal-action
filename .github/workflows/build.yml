@@ -51,19 +51,27 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-16.04, ubuntu-18.04, macOS-10.14]
-        crystal: [0.31.0, 0.31.1]
+        crystal: [0.31.0, 0.31.1, latest]
+        shards: [v0.8.1, v0.9.0, latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: MeilCli/setup-crystal-action@master
         with: 
           crystal_version: ${{ matrix.crystal }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: MeilCli/test-command-action@master
+      - uses: MeilCli/test-command-action@v1
+        if: matrix.crystal != 'latest'
         name: Check Crystal Version
         with:
           command: crystal version
           expect_contain: 'Crystal ${{ matrix.crystal }}'
-      - run: |
-          shards --version
+      - uses: MeilCli/test-command-action@v1
+        if: matrix.shards != 'latest'
+        name: Check Shards Version
+        with:
+          command: shards --version
+          expect_contain: 'Shards ${{ matrix.shards }}'
+      - name: Run Crystal
+        run: |
           echo 'puts "Hello Crystal"' > hello.cr
           crystal run hello.cr
