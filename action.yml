@@ -1,0 +1,20 @@
+name: 'setup crystal'
+description: 'setup crystal, JavaScript based action'
+author: 'MeilCli'
+branding:
+  icon: arrow-down-circle
+  color: blue
+inputs:
+  crystal_version:
+    description: 'install crystal version'
+    required: true
+    default: "0.31.1"
+  github_token:
+    description: 'github token, using get GitHub Release of crystallang/crystal'
+    required: true
+outputs:
+  installed_crystal_json:
+    description: 'installed crystal asset of crystallang/crystal Release'
+runs:
+  using: 'node12'
+  main: 'lib/main.js'
