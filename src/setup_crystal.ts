@@ -69,15 +69,20 @@ async function installNeedSoftware() {
     }
 }
 
+export function toVersion(name: string): string {
+    return name
+        .replace("crystal-", "")
+        .replace("-darwin-x86_64.tar.gz", "")
+        .replace("-linux-x86_64.tar.gz", "");
+}
+
 export async function installCrystal(option: Option) {
     if (platform == "win32") {
         throw Error("setup crystal action not support windows");
     }
 
     const installAsset = await getInstallAsset(option);
-    const version = installAsset.name
-        .replace("-darwin-x86_64.tar.gz", "")
-        .replace("-linux-x86_64.tar.gz", "");
+    const version = toVersion(installAsset.name);
 
     let toolPath = tc.find("crystal", version);
     if (!toolPath) {
