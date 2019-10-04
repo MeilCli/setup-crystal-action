@@ -47,6 +47,7 @@ jobs:
       env:
         DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
+    if: github.event_name  != 'pull_request'
     strategy:
       matrix:
         os: [ubuntu-16.04, ubuntu-18.04, macOS-10.14]
