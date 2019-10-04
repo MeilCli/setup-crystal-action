@@ -10,7 +10,10 @@ export interface Option {
 
 function getOption(): Option {
     const crystalVersion = core.getInput("crystal_version", { required: true });
-    const shardsVersion = core.getInput("shards_version", { required: true });
+    let shardsVersion = core.getInput("shards_version", { required: true });
+    if (shardsVersion != "latest" && shardsVersion.startsWith("v") == false) {
+        shardsVersion = `v${shardsVersion}`;
+    }
     const githubToken = core.getInput("github_token", { required: true });
     return {
         crystalVersion: crystalVersion,
