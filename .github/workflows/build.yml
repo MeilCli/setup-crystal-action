@@ -59,8 +59,11 @@ jobs:
         with: 
           crystal_version: ${{ matrix.crystal }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: MeilCli/test-command-action@master
+        with:
+          command: crystal version
+          expect: 'Crystal\s${{ matrix.crystal }}\s\(.+?\).+?'
       - run: |
-          crystal version
           shards --version
           echo 'puts "Hello Crystal"' > hello.cr
           crystal run hello.cr
