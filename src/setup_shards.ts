@@ -4,6 +4,7 @@ import * as tc from "@actions/tool-cache";
 import * as octkit from "@actions/github";
 import * as os from "os";
 import * as path from "path";
+import * as fs from "fs";
 import { Option } from "./main";
 import {
     Response,
@@ -63,11 +64,15 @@ export async function installShards(option: Option) {
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
         const extractPath = await tc.extractTar(downloadPath);
+        const nestedFolder = fs
+            .readdirSync(extractPath)
+            .filter(x => x.startsWith("crystal"))[0];
+        const sourcePath = path.join(extractPath, nestedFolder);
         await exec.exec("make CRFLAGS=--release", undefined, {
-            cwd: extractPath
+            cwd: sourcePath
         });
         toolPath = await tc.cacheDir(
-            extractPath,
+            sourcePath,
             "shards",
             installAsset.tag_name
         );
