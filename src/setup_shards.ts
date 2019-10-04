@@ -63,7 +63,9 @@ export async function installShards(option: Option) {
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
         const extractPath = await tc.extractTar(downloadPath);
-        await exec.exec("make CRFLAGS=--release", undefined);
+        await exec.exec("make CRFLAGS=--release", undefined, {
+            cwd: extractPath
+        });
         toolPath = await tc.cacheDir(
             extractPath,
             "shards",
