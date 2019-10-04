@@ -47,7 +47,7 @@ async function getInstallAsset(
         | ReposGetLatestReleaseResponseAssetsItem
     > = [];
 
-    for (const asset of assets) {
+    for (const asset of response.data.assets) {
         assets.push(asset);
     }
 
