@@ -60,5 +60,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           crystal version
-          echo 'puts "Hello Crystal'!' > hello.cr
+          echo 'puts "Hello Crystal"' > hello.cr
           crystal run hello.cr
