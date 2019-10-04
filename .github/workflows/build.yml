@@ -54,7 +54,6 @@ jobs:
         crystal: [0.31.0, 0.31.1]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
       - uses: MeilCli/setup-crystal-action@master
         with: 
           crystal_version: ${{ matrix.crystal }}
@@ -63,7 +62,7 @@ jobs:
         name: Check Crystal Version
         with:
           command: crystal version
-          expect: '.+?Crystal.+?${{ matrix.crystal }}.+?'
+          expect_contain: 'Crystal {{ matrix.crystal }}'
       - run: |
           shards --version
           echo 'puts "Hello Crystal"' > hello.cr
