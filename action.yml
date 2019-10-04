@@ -9,12 +9,16 @@ inputs:
     description: 'install crystal version'
     required: true
     default: "0.31.1"
+  shards_version:
+    description: 'install shards version, will install compiler-including or latest version if no-value'
   github_token:
-    description: 'github token, using get GitHub Release of crystallang/crystal'
+    description: 'github token, using get GitHub Release of crystal-lang/crystal or crystal-lang/shards'
     required: true
 outputs:
   installed_crystal_json:
-    description: 'installed crystal asset of crystallang/crystal Release'
+    description: 'installed crystal asset of crystal-lang/crystal Release'
+  installed_shards_json:
+    description: 'installed shards asset of crystal-lang/shards Release'
 runs:
   using: 'node12'
   main: 'lib/main.js'

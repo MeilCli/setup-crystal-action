@@ -52,13 +52,13 @@ export async function installCrystal(option: Option) {
         .replace("-darwin-x86_64.tar.gz", "")
         .replace("-linux-x86_64.tar.gz", "");
 
-    let toolPath = tc.find("crystal", version, platform);
+    let toolPath = tc.find("crystal", version);
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(
             installAsset.browser_download_url
         );
         const extractPath = await tc.extractTar(downloadPath);
-        toolPath = await tc.cacheDir(extractPath, "crystal", version, platform);
+        toolPath = await tc.cacheDir(extractPath, "crystal", version);
     }
 
     // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
