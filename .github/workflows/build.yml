@@ -62,7 +62,7 @@ jobs:
       - uses: MeilCli/test-command-action@master
         with:
           command: crystal version
-          expect: 'Crystal\s${{ matrix.crystal }}\s\[.+?\]\s\(.+?\).+?'
+          expect: 'Crystal\\s${{ matrix.crystal }}\\s\\[.+?\\]\\s.+?'
       - run: |
           shards --version
           echo 'puts "Hello Crystal"' > hello.cr
