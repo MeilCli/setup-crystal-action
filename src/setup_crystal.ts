@@ -47,7 +47,9 @@ export async function installCrystal(option: Option) {
 
     let toolPath = tc.find("crystal", version, platform);
     if (!toolPath) {
-        const downloadPath = await tc.downloadTool(installAsset.url);
+        const downloadPath = await tc.downloadTool(
+            installAsset.browser_download_url
+        );
         const extractPath = await tc.extractTar(downloadPath);
         toolPath = await tc.cacheDir(extractPath, "crystal", version, platform);
     }
