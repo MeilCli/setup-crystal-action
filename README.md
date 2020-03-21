@@ -21,7 +21,7 @@ jobs:
   example:
     runs-on: ubuntu-16.04
     steps:
-      - uses: MeilCli/setup-crystal-action@v1
+      - uses: MeilCli/setup-crystal-action@v2
         with: 
           crystal_version: 0.31.1
           shards_version: 0.9.0
