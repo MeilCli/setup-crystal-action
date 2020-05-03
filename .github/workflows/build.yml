@@ -53,23 +53,9 @@ jobs:
         # crystal 0.34.0 has breaking change, shards 0.10.0 needs crsytal 0.34.0, and shards 0.9.0 needs less than or equal to crystal 0.33.0
         os: [ubuntu-16.04, ubuntu-18.04, macOS-10.14]
         crystal: [0.33.0, 0.34.0, latest]
-        include:
+        shards: [0.9.0, 0.10.0, latest]
+        exclude:
           - os: ubuntu-16.04
-            crystal: 0.33.0
-            shards: 0.9.0
-          - os: ubuntu-18.04
-            crystal: 0.33.0
-            shards: 0.9.0
-          - os: macOS-10.14
-            crystal: 0.33.0
-            shards: 0.9.0
-          - os: ubuntu-16.04
-            crystal: 0.33.0
-            shards: 0.10.0
-          - os: ubuntu-18.04
-            crystal: 0.33.0
-            shards: 0.10.0
-          - os: macOS-10.14
             crystal: 0.33.0
             shards: 0.10.0
           - os: ubuntu-16.04
@@ -77,10 +63,34 @@ jobs:
             shards: latest
           - os: ubuntu-18.04
             crystal: 0.33.0
+            shards: 0.10.0
+          - os: ubuntu-18.04
+            crystal: 0.33.0
             shards: latest
           - os: macOS-10.14
             crystal: 0.33.0
+            shards: 0.10.0
+          - os: macOS-10.14
+            crystal: 0.33.0
             shards: latest
+          - os: ubuntu-16.04
+            crystal: 0.34.0
+            shards: 0.9.0
+          - os: ubuntu-18.04
+            crystal: 0.34.0
+            shards: 0.9.0
+          - os: macOS-10.14
+            crystal: 0.34.0
+            shards: 0.9.0
+          - os: ubuntu-16.04
+            crystal: latest
+            shards: 0.9.0
+          - os: ubuntu-18.04
+            crystal: latest
+            shards: 0.9.0
+          - os: macOS-10.14
+            crystal: latest
+            shards: 0.9.0
     runs-on: ${{ matrix.os }}
     steps:
       - uses: MeilCli/setup-crystal-action@master
