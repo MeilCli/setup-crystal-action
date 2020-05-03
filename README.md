@@ -23,9 +23,8 @@ jobs:
     steps:
       - uses: MeilCli/setup-crystal-action@v3
         with: 
-          crystal_version: 0.31.1
-          shards_version: 0.9.0
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          crystal_version: 0.34.0
+          shards_version: 0.10.0
       - name: Run Crystal
         run: |
           echo 'puts "Hello Crystal"' > hello.cr
