@@ -18,7 +18,7 @@ async function getInstallAsset(option: Option): Promise<ReposGetReleaseByTagResp
         response = await github.repos.getReleaseByTag({
             owner: "crystal-lang",
             repo: "shards",
-            tag: option.shardsVersion
+            tag: `v${option.shardsVersion}`
         });
     } else {
         response = await github.repos.getLatestRelease({
