@@ -17,14 +17,9 @@ const platform: string = os.platform();
 
 async function getInstallAsset(
     option: Option
-): Promise<
-    | ReposGetReleaseByTagResponseAssetsItem
-    | ReposGetLatestReleaseResponseAssetsItem
-> {
+): Promise<ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem> {
     const github = new octkit.GitHub(option.githubToken);
-    let response: Response<
-        ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse
-    >;
+    let response: Response<ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse>;
     if (option.crystalVersion != "latest") {
         response = await github.repos.getReleaseByTag({
             owner: "crystal-lang",
@@ -42,10 +37,7 @@ async function getInstallAsset(
         throw Error("fail get crystal releases");
     }
 
-    const assets: Array<
-        | ReposGetReleaseByTagResponseAssetsItem
-        | ReposGetLatestReleaseResponseAssetsItem
-    > = [];
+    const assets: Array<ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem> = [];
 
     for (const asset of response.data.assets) {
         assets.push(asset);
@@ -77,13 +69,9 @@ export function toVersion(name: string): string {
 }
 
 function getChildFolder(
-    asset:
-        | ReposGetReleaseByTagResponseAssetsItem
-        | ReposGetLatestReleaseResponseAssetsItem
+    asset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem
 ): string {
-    return asset.name
-        .replace("-darwin-x86_64.tar.gz", "")
-        .replace("-linux-x86_64.tar.gz", "");
+    return asset.name.replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
 }
 
 export async function installCrystal(option: Option) {
@@ -96,9 +84,7 @@ export async function installCrystal(option: Option) {
 
     let toolPath = tc.find("crystal", version);
     if (!toolPath) {
-        const downloadPath = await tc.downloadTool(
-            installAsset.browser_download_url
-        );
+        const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
         const extractPath = await tc.extractTar(downloadPath);
         toolPath = await tc.cacheDir(extractPath, "crystal", version);
     }
