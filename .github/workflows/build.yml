@@ -1,62 +1,62 @@
 name: CI
 
-on: 
+on:
   push:
-    branches:    
-    - master
+    branches:
+      - master
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 12.x
-    - name: npm install, build and test
-      run: |
-        npm install
-        npm run build
-        npm run test
-      env:
-        CI: true
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - name: npm install, build and test
+        run: |
+          npm install
+          npm run build
+          npm run test
+        env:
+          CI: true
   danger:
     runs-on: ubuntu-latest
     if: github.event_name  == 'pull_request'
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 12.x
-    - uses: actions/setup-ruby@v1
-      with:
-        ruby-version: '2.6'
-    - name: npm install
-      run: |
-        npm install
-      env:
-        CI: true
-    - uses: MeilCli/danger-action@v1
-      with:
-        plugins_file: 'Gemfile'
-        danger_file: 'Dangerfile'
-        danger_id: 'danger-pr'
-      env:
-        DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: "2.6"
+      - name: npm install
+        run: |
+          npm install
+        env:
+          CI: true
+      - uses: MeilCli/danger-action@v1
+        with:
+          plugins_file: "Gemfile"
+          danger_file: "Dangerfile"
+          danger_id: "danger-pr"
+        env:
+          DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     if: github.event_name  != 'pull_request'
     strategy:
       matrix:
         os: [ubuntu-16.04, ubuntu-18.04, macOS-10.14]
-        crystal: [0.31.0, 0.31.1, latest]
-        shards: [0.8.1, 0.9.0, latest]
+        crystal: [0.33.0, 0.34.0, latest]
+        shards: [0.8.1, 0.9.0, 0.10.0, latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: MeilCli/setup-crystal-action@master
-        with: 
+        with:
           crystal_version: ${{ matrix.crystal }}
           shards_version: ${{ matrix.shards }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -65,13 +65,13 @@ jobs:
         name: Check Crystal Version
         with:
           command: crystal version
-          expect_contain: 'Crystal ${{ matrix.crystal }}'
+          expect_contain: "Crystal ${{ matrix.crystal }}"
       - uses: MeilCli/test-command-action@v1
         if: matrix.shards != 'latest'
         name: Check Shards Version
         with:
           command: shards --version
-          expect_contain: 'Shards ${{ matrix.shards }}'
+          expect_contain: "Shards ${{ matrix.shards }}"
       - name: Run Crystal
         run: |
           echo 'puts "Hello Crystal"' > hello.cr
