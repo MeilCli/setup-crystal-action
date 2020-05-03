@@ -21,7 +21,7 @@ jobs:
   example:
     runs-on: ubuntu-16.04
     steps:
-      - uses: MeilCli/setup-crystal-action@v2
+      - uses: MeilCli/setup-crystal-action@v3
         with: 
           crystal_version: 0.31.1
           shards_version: 0.9.0
@@ -31,6 +31,8 @@ jobs:
           echo 'puts "Hello Crystal"' > hello.cr
           crystal run hello.cr
 ```
+
+You can also pin to a [specific release](https://github.com/MeilCli/setup-crystal-action/releases) version in the format `@v3.x.x`
 
 ## input
 - `crystal_version`
@@ -45,8 +47,8 @@ jobs:
     - if set `skip`, not install shards
   - default: `latest`
 - `github_token`
-  - required
   - github token, using get GitHub Release of crystal-lang/crystal or crystal-lang/shards
+  - default: `GITHUB_TOKEN`
 
 ## output
 - `installed_crystal_json`
