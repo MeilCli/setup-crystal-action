@@ -62,15 +62,9 @@ export async function installShards(option: Option) {
         const nestedFolder = fs.readdirSync(extractPath).filter(x => x.startsWith("crystal"))[0];
         const sourcePath = path.join(extractPath, nestedFolder);
 
-        core.info(
-            `dump option shards: ${option.shardsVersion}, 0.10.0 <= shards == ${semver.lte(
-                "0.10.0",
-                option.shardsVersion
-            )}`
-        );
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
-            await exec.exec("make lib", undefined, {
+            await exec.exec("shards install", undefined, {
                 cwd: sourcePath
             });
             await exec.exec("make", undefined, {
