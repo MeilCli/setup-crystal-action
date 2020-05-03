@@ -22,9 +22,9 @@ function getOption(): Option {
 async function run() {
     try {
         const option = getOption();
-        const crystalBinPath = await installCrystal(option);
+        const crystalInstalledPath = await installCrystal(option);
         if (option.shardsVersion != "skip") {
-            await installShards(option, crystalBinPath);
+            await installShards(option, crystalInstalledPath);
         }
     } catch (error) {
         core.setFailed(error.message);
