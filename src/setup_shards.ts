@@ -43,7 +43,7 @@ async function installNeedSoftware() {
     }
 }
 
-export async function installShards(option: Option) {
+export async function installShards(option: Option, crystalBinPath: string) {
     if (platform == "win32") {
         throw Error("setup crystal action not support windows");
     }
@@ -64,7 +64,7 @@ export async function installShards(option: Option) {
 
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
-            await exec.exec("shards install", undefined, {
+            await exec.exec(`${crystalBinPath}/shards install`, undefined, {
                 cwd: sourcePath
             });
             await exec.exec("make", undefined, {

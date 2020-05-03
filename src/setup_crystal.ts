@@ -74,7 +74,7 @@ function getChildFolder(
     return asset.name.replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
 }
 
-export async function installCrystal(option: Option) {
+export async function installCrystal(option: Option): Promise<string> {
     if (platform == "win32") {
         throw Error("setup crystal action not support windows");
     }
@@ -97,4 +97,6 @@ export async function installCrystal(option: Option) {
     await installNeedSoftware();
 
     core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+
+    return binPath;
 }
