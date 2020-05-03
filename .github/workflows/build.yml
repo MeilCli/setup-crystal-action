@@ -55,9 +55,13 @@ jobs:
         crystal: [0.33.0, 0.34.0, latest]
         include:
           - crystal: 0.33.0
-            shards: [0.8.1, 0.9.0]
+            shards: 0.8.1
+          - crystal: 0.33.0
+            shards: 0.9.0
           - crystal: 0.34.0
-            shards: [0.10.0, latest]
+            shards: 0.10.0
+          - crsytal: 0.34.0
+            shards: latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: MeilCli/setup-crystal-action@master
