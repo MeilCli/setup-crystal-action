@@ -54,13 +54,32 @@ jobs:
         os: [ubuntu-16.04, ubuntu-18.04, macOS-10.14]
         crystal: [0.33.0, 0.34.0, latest]
         include:
-          - crystal: 0.33.0
-            shards: 0.8.1
-          - crystal: 0.33.0
+          - os: ubuntu-16.04
+            crystal: 0.33.0
             shards: 0.9.0
-          - crystal: 0.34.0
+          - os: ubuntu-18.04
+            crystal: 0.33.0
+            shards: 0.9.0
+          - os: macOS-10.14
+            crystal: 0.33.0
+            shards: 0.9.0
+          - os: ubuntu-16.04
+            crystal: 0.33.0
             shards: 0.10.0
-          - crsytal: 0.34.0
+          - os: ubuntu-18.04
+            crystal: 0.33.0
+            shards: 0.10.0
+          - os: macOS-10.14
+            crystal: 0.33.0
+            shards: 0.10.0
+          - os: ubuntu-16.04
+            crystal: 0.33.0
+            shards: latest
+          - os: ubuntu-18.04
+            crystal: 0.33.0
+            shards: latest
+          - os: macOS-10.14
+            crystal: 0.33.0
             shards: latest
     runs-on: ${{ matrix.os }}
     steps:
