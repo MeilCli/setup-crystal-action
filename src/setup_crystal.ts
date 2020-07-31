@@ -1,35 +1,34 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import * as tc from "@actions/tool-cache";
-import * as octkit from "@actions/github";
+import * as github from "@actions/github";
 import * as os from "os";
 import * as path from "path";
 import { Option } from "./main";
-import {
-    Response,
-    ReposGetReleaseByTagResponse,
-    ReposGetLatestReleaseResponse,
-    ReposGetReleaseByTagResponseAssetsItem,
-    ReposGetLatestReleaseResponseAssetsItem
-} from "@octokit/rest";
+import { Endpoints } from "@octokit/types";
+
+type ReposGetReleaseByTagResponse = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"];
+type ReposGetLatestReleaseResponse = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"];
+type ReposGetReleaseByTagResponseAssetsItem = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"]["data"]["assets"][0];
+type ReposGetLatestReleaseResponseAssetsItem = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"]["data"]["assets"][0];
 
 const platform: string = os.platform();
 
 async function getInstallAsset(
     option: Option
 ): Promise<ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem> {
-    const github = new octkit.GitHub(option.githubToken);
-    let response: Response<ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse>;
+    const client = github.getOctokit(option.githubToken);
+    let response: ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse;
     if (option.crystalVersion != "latest") {
-        response = await github.repos.getReleaseByTag({
+        response = await client.repos.getReleaseByTag({
             owner: "crystal-lang",
             repo: "crystal",
-            tag: option.crystalVersion
+            tag: option.crystalVersion,
         });
     } else {
-        response = await github.repos.getLatestRelease({
+        response = await client.repos.getLatestRelease({
             owner: "crystal-lang",
-            repo: "crystal"
+            repo: "crystal",
         });
     }
 
@@ -43,7 +42,7 @@ async function getInstallAsset(
         assets.push(asset);
     }
 
-    const fileUrls = assets.filter(x => {
+    const fileUrls = assets.filter((x) => {
         if (platform == "darwin") {
             return x.name.endsWith("-darwin-x86_64.tar.gz");
         } else {
@@ -62,10 +61,7 @@ async function installNeedSoftware() {
 }
 
 export function toVersion(name: string): string {
-    return name
-        .replace("crystal-", "")
-        .replace("-darwin-x86_64.tar.gz", "")
-        .replace("-linux-x86_64.tar.gz", "");
+    return name.replace("crystal-", "").replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
 }
 
 function getChildFolder(

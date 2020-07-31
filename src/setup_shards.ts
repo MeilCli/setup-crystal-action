@@ -1,29 +1,34 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import * as tc from "@actions/tool-cache";
-import * as octkit from "@actions/github";
+import * as github from "@actions/github";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import * as semver from "semver";
 import { Option } from "./main";
-import { Response, ReposGetReleaseByTagResponse, ReposGetLatestReleaseResponse } from "@octokit/rest";
+import { Endpoints } from "@octokit/types";
+
+type ReposGetReleaseByTagResponse = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"];
+type ReposGetLatestReleaseResponse = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"];
+type ReposGetReleaseByTag = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"]["data"];
+type ReposGetLatestRelease = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"]["data"];
 
 const platform: string = os.platform();
 
-async function getInstallAsset(option: Option): Promise<ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse> {
-    const github = new octkit.GitHub(option.githubToken);
-    let response: Response<ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse>;
+async function getInstallAsset(option: Option): Promise<ReposGetReleaseByTag | ReposGetLatestRelease> {
+    const client = github.getOctokit(option.githubToken);
+    let response: ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse;
     if (option.shardsVersion != "latest") {
-        response = await github.repos.getReleaseByTag({
+        response = await client.repos.getReleaseByTag({
             owner: "crystal-lang",
             repo: "shards",
-            tag: `v${option.shardsVersion}`
+            tag: `v${option.shardsVersion}`,
         });
     } else {
-        response = await github.repos.getLatestRelease({
+        response = await client.repos.getLatestRelease({
             owner: "crystal-lang",
-            repo: "shards"
+            repo: "shards",
         });
     }
 
@@ -46,12 +51,12 @@ async function installNeedSoftware() {
 async function shardsInstall(crystalInstalledPath: string, sourcePath: string) {
     if (platform == "linux") {
         await exec.exec(`${crystalInstalledPath}/bin/shards install`, undefined, {
-            cwd: sourcePath
+            cwd: sourcePath,
         });
     }
     if (platform == "darwin") {
         await exec.exec(`${crystalInstalledPath}/embedded/bin/shards install`, undefined, {
-            cwd: sourcePath
+            cwd: sourcePath,
         });
     }
 }
@@ -72,18 +77,18 @@ export async function installShards(option: Option, crystalInstalledPath: string
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
         const extractPath = await tc.extractTar(downloadPath);
-        const nestedFolder = fs.readdirSync(extractPath).filter(x => x.startsWith("crystal"))[0];
+        const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
         const sourcePath = path.join(extractPath, nestedFolder);
 
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
             await shardsInstall(crystalInstalledPath, sourcePath);
             await exec.exec("make", undefined, {
-                cwd: sourcePath
+                cwd: sourcePath,
             });
         } else {
             await exec.exec("make CRFLAGS=--release", undefined, {
-                cwd: sourcePath
+                cwd: sourcePath,
             });
         }
         toolPath = await tc.cacheDir(sourcePath, "shards", installAsset.tag_name);

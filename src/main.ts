@@ -15,7 +15,7 @@ function getOption(): Option {
     return {
         crystalVersion: crystalVersion,
         shardsVersion: shardsVersion,
-        githubToken: githubToken
+        githubToken: githubToken,
     };
 }
 
