@@ -130,11 +130,11 @@ async function installShardsToTemp(
 
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
-    const cacheKey = `${platform}-shards-${installAsset.tag_name}`;
+    const cacheKey = `${platform}-shards-${installAsset.tag_name}-`;
 
     try {
         if (option.cacheMode == "cache") {
-            const fitKey = await cache.restoreCache([binPath], cacheKey);
+            const fitKey = await cache.restoreCache([shardsPath], cacheKey);
             if (fitKey == cacheKey) {
                 core.addPath(binPath);
                 core.info(`shards bin: ${binPath}`);
@@ -166,7 +166,7 @@ async function installShardsToTemp(
     }
 
     if (option.cacheMode == "cache") {
-        await cache.saveCache([binPath], cacheKey);
+        await cache.saveCache([shardsPath], cacheKey);
     }
 
     core.addPath(binPath);

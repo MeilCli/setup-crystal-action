@@ -122,11 +122,11 @@ async function installCrystalToTemp(
     // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
-    const cacheKey = `${platform}-crystal-${version}`;
+    const cacheKey = `${platform}-crystal-${version}-`;
 
     try {
         if (option.cacheMode == "cache") {
-            const fitKey = await cache.restoreCache([binPath], cacheKey);
+            const fitKey = await cache.restoreCache([crystalPath], cacheKey);
             if (fitKey == cacheKey) {
                 core.addPath(binPath);
                 core.info(`crystal bin: ${binPath}`);
@@ -144,7 +144,7 @@ async function installCrystalToTemp(
     await io.mv(extractPath, crystalPath);
 
     if (option.cacheMode == "cache") {
-        await cache.saveCache([binPath], cacheKey);
+        await cache.saveCache([crystalPath], cacheKey);
     }
     core.addPath(binPath);
     core.info(`crystal bin: ${binPath}`);
