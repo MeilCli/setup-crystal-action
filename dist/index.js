@@ -32422,7 +32422,7 @@ function installCrystalToTemp(installAsset, version, option) {
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
         // postfix number is internal version by this action
-        const cacheKey = `${platform}-crystal-${version}-3`;
+        const cacheKey = `${platform}-crystal-${version}-4`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
@@ -35353,7 +35353,7 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const shardsPath = path.join(option.installRoot, "shards");
         const binPath = path.join(shardsPath, "bin");
         // postfix number is internal version by this action
-        const cacheKey = `${platform}-shards-${installAsset.tag_name}-3`;
+        const cacheKey = `${platform}-shards-${installAsset.tag_name}-4`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
