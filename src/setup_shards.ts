@@ -130,7 +130,7 @@ async function installShardsToTemp(
 
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
-    const cacheKey = `${platform}-crystal-${installAsset.tag_name}`;
+    const cacheKey = `${platform}-shards-${installAsset.tag_name}`;
 
     try {
         if (option.cacheMode == "cache") {
