@@ -131,13 +131,17 @@ async function installShardsToTemp(
     const binPath = path.join(shardsPath, "bin");
     const cacheKey = `${platform}-crystal-${installAsset.tag_name}`;
 
-    if (option.cacheMode == "cache") {
-        const fitKey = await cache.restoreCache([binPath], cacheKey);
-        if (fitKey == cacheKey) {
-            core.addPath(binPath);
-            core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-            return;
+    try {
+        if (option.cacheMode == "cache") {
+            const fitKey = await cache.restoreCache([binPath], cacheKey);
+            if (fitKey == cacheKey) {
+                core.addPath(binPath);
+                core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+                return;
+            }
         }
+    } catch (error) {
+        core.info("fails cache restore");
     }
 
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);

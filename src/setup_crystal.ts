@@ -123,14 +123,18 @@ async function installCrystalToTemp(
     const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
     const cacheKey = `${platform}-crystal-${version}`;
 
-    if (option.cacheMode == "cache") {
-        const fitKey = await cache.restoreCache([binPath], cacheKey);
-        if (fitKey == cacheKey) {
-            core.addPath(binPath);
-            await installNeedSoftware();
-            core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-            return path.join(crystalPath, getChildFolder(installAsset));
+    try {
+        if (option.cacheMode == "cache") {
+            const fitKey = await cache.restoreCache([binPath], cacheKey);
+            if (fitKey == cacheKey) {
+                core.addPath(binPath);
+                await installNeedSoftware();
+                core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+                return path.join(crystalPath, getChildFolder(installAsset));
+            }
         }
+    } catch (error) {
+        core.info("fails cache restore");
     }
 
     const downloadPath = await tc.downloadTool(installAsset.browser_download_url);

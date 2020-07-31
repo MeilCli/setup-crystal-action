@@ -32419,14 +32419,19 @@ function installCrystalToTemp(installAsset, version, option) {
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
         const cacheKey = `${platform}-crystal-${version}`;
-        if (option.cacheMode == "cache") {
-            const fitKey = yield cache.restoreCache([binPath], cacheKey);
-            if (fitKey == cacheKey) {
-                core.addPath(binPath);
-                yield installNeedSoftware();
-                core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-                return path.join(crystalPath, getChildFolder(installAsset));
+        try {
+            if (option.cacheMode == "cache") {
+                const fitKey = yield cache.restoreCache([binPath], cacheKey);
+                if (fitKey == cacheKey) {
+                    core.addPath(binPath);
+                    yield installNeedSoftware();
+                    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+                    return path.join(crystalPath, getChildFolder(installAsset));
+                }
             }
+        }
+        catch (error) {
+            core.info("fails cache restore");
         }
         const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
         const extractPath = yield tc.extractTar(downloadPath);
@@ -35339,13 +35344,18 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const shardsPath = path.join(option.installRoot, "shards");
         const binPath = path.join(shardsPath, "bin");
         const cacheKey = `${platform}-crystal-${installAsset.tag_name}`;
-        if (option.cacheMode == "cache") {
-            const fitKey = yield cache.restoreCache([binPath], cacheKey);
-            if (fitKey == cacheKey) {
-                core.addPath(binPath);
-                core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-                return;
+        try {
+            if (option.cacheMode == "cache") {
+                const fitKey = yield cache.restoreCache([binPath], cacheKey);
+                if (fitKey == cacheKey) {
+                    core.addPath(binPath);
+                    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+                    return;
+                }
             }
+        }
+        catch (error) {
+            core.info("fails cache restore");
         }
         const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
         const extractPath = yield tc.extractTar(downloadPath);
