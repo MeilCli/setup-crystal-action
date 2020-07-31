@@ -1,52 +1,54 @@
 {
-  "name": "setup-crystal-action",
-  "version": "1.0.0",
-  "description": "setup crystal",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "test": "jest",
-    "lint": "eslint src/**/*.ts"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@octokit/types": "^5.2.0",
-    "@types/jest": "^26.0.8",
-    "@types/node": "^14.0.27",
-    "@types/semver": "^7.3.1",
-    "@typescript-eslint/eslint-plugin": "^3.7.1",
-    "@typescript-eslint/parser": "^3.7.1",
-    "eslint": "^7.5.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "jest": "^26.2.2",
-    "jest-circus": "^26.2.2",
-    "prettier": "^2.0.5",
-    "ts-jest": "^26.1.4",
-    "typescript": "^3.9.7"
-  },
-  "dependencies": {
-    "@actions/core": "^1.2.4",
-    "@actions/github": "^4.0.0",
-    "@actions/tool-cache": "^1.6.0",
-    "semver": "^7.3.2"
-  },
-  "jest": {
-    "clearMocks": true,
-    "moduleFileExtensions": [
-      "js",
-      "ts"
-    ],
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/*.test.ts"
-    ],
-    "testRunner": "jest-circus/runner",
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
+    "name": "setup-crystal-action",
+    "version": "1.0.0",
+    "description": "setup crystal",
+    "main": "lib/main.js",
+    "scripts": {
+        "build": "tsc",
+        "pack": "ncc build",
+        "test": "jest",
+        "lint": "eslint src/**/*.ts"
     },
-    "verbose": true
-  }
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@octokit/types": "^5.2.0",
+        "@types/jest": "^26.0.8",
+        "@types/node": "^14.0.27",
+        "@types/semver": "^7.3.1",
+        "@typescript-eslint/eslint-plugin": "^3.7.1",
+        "@typescript-eslint/parser": "^3.7.1",
+        "@zeit/ncc": "^0.22.3",
+        "eslint": "^7.5.0",
+        "eslint-config-prettier": "^6.11.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "jest": "^26.2.2",
+        "jest-circus": "^26.2.2",
+        "prettier": "^2.0.5",
+        "ts-jest": "^26.1.4",
+        "typescript": "^3.9.7"
+    },
+    "dependencies": {
+        "@actions/core": "^1.2.4",
+        "@actions/github": "^4.0.0",
+        "@actions/tool-cache": "^1.6.0",
+        "semver": "^7.3.2"
+    },
+    "jest": {
+        "clearMocks": true,
+        "moduleFileExtensions": [
+            "js",
+            "ts"
+        ],
+        "testEnvironment": "node",
+        "testMatch": [
+            "**/*.test.ts"
+        ],
+        "testRunner": "jest-circus/runner",
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
+        "verbose": true
+    }
 }
