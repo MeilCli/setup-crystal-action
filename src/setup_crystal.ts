@@ -103,6 +103,7 @@ async function installCrystalToUseToolCache(
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
     core.addPath(binPath);
+    core.info(`crystal bin: ${binPath}`);
     await installNeedSoftware();
     core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
     return path.join(toolPath, getChildFolder(installAsset));
@@ -128,6 +129,7 @@ async function installCrystalToTemp(
             const fitKey = await cache.restoreCache([binPath], cacheKey);
             if (fitKey == cacheKey) {
                 core.addPath(binPath);
+                core.info(`crystal bin: ${binPath}`);
                 await installNeedSoftware();
                 core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
                 return path.join(crystalPath, getChildFolder(installAsset));
@@ -145,6 +147,7 @@ async function installCrystalToTemp(
         await cache.saveCache([binPath], cacheKey);
     }
     core.addPath(binPath);
+    core.info(`crystal bin: ${binPath}`);
     await installNeedSoftware();
     core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
     return path.join(crystalPath, getChildFolder(installAsset));

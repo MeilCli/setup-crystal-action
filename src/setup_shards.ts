@@ -112,6 +112,7 @@ async function installShardsToToolCache(
 
     const binPath = path.join(toolPath, "bin");
     core.addPath(binPath);
+    core.info(`shards bin: ${binPath}`);
 
     core.setOutput("installed_shards_json", JSON.stringify(installAsset));
 }
@@ -136,6 +137,7 @@ async function installShardsToTemp(
             const fitKey = await cache.restoreCache([binPath], cacheKey);
             if (fitKey == cacheKey) {
                 core.addPath(binPath);
+                core.info(`shards bin: ${binPath}`);
                 core.setOutput("installed_shards_json", JSON.stringify(installAsset));
                 return;
             }
@@ -168,6 +170,7 @@ async function installShardsToTemp(
     }
 
     core.addPath(binPath);
+    core.info(`shards bin: ${binPath}`);
 
     core.setOutput("installed_shards_json", JSON.stringify(installAsset));
 }
