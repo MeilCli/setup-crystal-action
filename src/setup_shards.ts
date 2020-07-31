@@ -131,7 +131,7 @@ async function installShardsToTemp(
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
     // postfix number is internal version by this action
-    const cacheKey = `${platform}-shards-${installAsset.tag_name}-2`;
+    const cacheKey = `${platform}-shards-${installAsset.tag_name}-3`;
 
     try {
         if (option.cacheMode == "cache") {
@@ -150,10 +150,10 @@ async function installShardsToTemp(
 
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);
     const extractPath = await tc.extractTar(downloadPath);
-    await io.mv(extractPath, shardsPath);
+    await io.cp(extractPath, shardsPath, { recursive: true, force: true });
     const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
     const sourcePath = path.join(shardsPath, nestedFolder);
-    await io.mv(sourcePath, binPath);
+    await io.cp(sourcePath, binPath, { recursive: true, force: true });
 
     if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
         // shards changes to require crystal-molinillo on 0.10.0
