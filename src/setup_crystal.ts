@@ -123,7 +123,7 @@ async function installCrystalToTemp(
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
     // postfix number is internal version by this action
-    const cacheKey = `${platform}-crystal-${version}-4`;
+    const cacheKey = `${platform}-crystal-${version}-5`;
 
     try {
         if (option.cacheMode == "cache") {
@@ -144,7 +144,6 @@ async function installCrystalToTemp(
     const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
     const extractPath = await tc.extractTar(downloadPath);
     await io.cp(extractPath, crystalPath, { recursive: true, force: true });
-    await exec.exec(`ls ${crystalPath} -R`);
 
     if (option.cacheMode == "cache") {
         await cache.saveCache([crystalPath], cacheKey);

@@ -32422,7 +32422,7 @@ function installCrystalToTemp(installAsset, version, option) {
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
         // postfix number is internal version by this action
-        const cacheKey = `${platform}-crystal-${version}-4`;
+        const cacheKey = `${platform}-crystal-${version}-5`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
@@ -32442,7 +32442,6 @@ function installCrystalToTemp(installAsset, version, option) {
         const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
         const extractPath = yield tc.extractTar(downloadPath);
         yield io.cp(extractPath, crystalPath, { recursive: true, force: true });
-        yield exec.exec(`ls ${crystalPath} -R`);
         if (option.cacheMode == "cache") {
             yield cache.saveCache([crystalPath], cacheKey);
         }
@@ -35353,7 +35352,7 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const shardsPath = path.join(option.installRoot, "shards");
         const binPath = path.join(shardsPath, "bin");
         // postfix number is internal version by this action
-        const cacheKey = `${platform}-shards-${installAsset.tag_name}-4`;
+        const cacheKey = `${platform}-shards-${installAsset.tag_name}-5`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
