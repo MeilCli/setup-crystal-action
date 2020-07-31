@@ -5138,6 +5138,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
 const setup_crystal_1 = __webpack_require__(442);
 const setup_shards_1 = __webpack_require__(482);
 function getOption() {
@@ -5169,6 +5170,7 @@ function run() {
         try {
             const option = getOption();
             const crystalInstalledPath = yield setup_crystal_1.installCrystal(option);
+            yield exec.exec("crystal version");
             if (option.shardsVersion != "skip") {
                 yield setup_shards_1.installShards(option, crystalInstalledPath);
             }

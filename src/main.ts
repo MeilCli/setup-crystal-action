@@ -1,4 +1,5 @@
 import * as core from "@actions/core";
+import * as exec from "@actions/exec";
 import { installCrystal } from "./setup_crystal";
 import { installShards } from "./setup_shards";
 
@@ -39,6 +40,7 @@ async function run() {
     try {
         const option = getOption();
         const crystalInstalledPath = await installCrystal(option);
+        await exec.exec("crystal version");
         if (option.shardsVersion != "skip") {
             await installShards(option, crystalInstalledPath);
         }
