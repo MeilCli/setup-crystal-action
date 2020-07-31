@@ -16,6 +16,11 @@ inputs:
   github_token:
     description: 'github token, using get GitHub Release of crystal-lang/crystal or crystal-lang/shards'
     default: ${{ github.token }}
+  cache_mode:
+    description: 'cache mode, value: none, tool-cache or cache, default: cache'
+  install_root:
+    description: 'if selected none or cache on cache_mode, use directory that dicide at this option'
+    default: ${{ runner.temp }}
 outputs:
   installed_crystal_json:
     description: 'installed crystal asset of crystal-lang/crystal Release'

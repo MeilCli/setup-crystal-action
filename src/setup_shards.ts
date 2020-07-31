@@ -1,6 +1,8 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
+import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
+import * as cache from "@actions/cache";
 import * as github from "@actions/github";
 import * as os from "os";
 import * as path from "path";
@@ -73,6 +75,20 @@ export async function installShards(option: Option, crystalInstalledPath: string
 
     await installNeedSoftware();
 
+    if (option.cacheMode == "tool-cache") {
+        await installShardsToToolCache(installAsset, crystalInstalledPath, option);
+    } else {
+        await installShardsToTemp(installAsset, crystalInstalledPath, option);
+    }
+}
+
+async function installShardsToToolCache(
+    installAsset: ReposGetReleaseByTag | ReposGetLatestRelease,
+    crystalInstalledPath: string,
+    option: Option
+) {
+    await installNeedSoftware();
+
     let toolPath = tc.find("shards", installAsset.tag_name);
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
@@ -95,6 +111,58 @@ export async function installShards(option: Option, crystalInstalledPath: string
     }
 
     const binPath = path.join(toolPath, "bin");
+    core.addPath(binPath);
+
+    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+}
+
+async function installShardsToTemp(
+    installAsset: ReposGetReleaseByTag | ReposGetLatestRelease,
+    crystalInstalledPath: string,
+    option: Option
+) {
+    if (option.installRoot == null) {
+        throw new Error("install root is null");
+    }
+
+    await installNeedSoftware();
+
+    const shardsPath = path.join(option.installRoot, "shards");
+    const binPath = path.join(shardsPath, "bin");
+    const cacheKey = `${platform}-crystal-${installAsset.tag_name}`;
+
+    if (option.cacheMode == "cache") {
+        const fitKey = await cache.restoreCache([binPath], cacheKey);
+        if (fitKey == cacheKey) {
+            core.addPath(binPath);
+            core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+            return;
+        }
+    }
+
+    const downloadPath = await tc.downloadTool(installAsset.tarball_url);
+    const extractPath = await tc.extractTar(downloadPath);
+    await io.mv(extractPath, shardsPath);
+    const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
+    const sourcePath = path.join(shardsPath, nestedFolder);
+    await io.mv(sourcePath, binPath);
+
+    if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
+        // shards changes to require crystal-molinillo on 0.10.0
+        await shardsInstall(crystalInstalledPath, binPath);
+        await exec.exec("make", undefined, {
+            cwd: binPath,
+        });
+    } else {
+        await exec.exec("make CRFLAGS=--release", undefined, {
+            cwd: binPath,
+        });
+    }
+
+    if (option.cacheMode == "cache") {
+        await cache.saveCache([binPath], cacheKey);
+    }
+
     core.addPath(binPath);
 
     core.setOutput("installed_shards_json", JSON.stringify(installAsset));

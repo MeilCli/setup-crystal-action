@@ -6,16 +6,32 @@ export interface Option {
     crystalVersion: string;
     shardsVersion: string;
     githubToken: string;
+    cacheMode: "none" | "tool-cache" | "cache";
+    installRoot: string | null;
 }
 
 function getOption(): Option {
     const crystalVersion = core.getInput("crystal_version", { required: true });
     const shardsVersion = core.getInput("shards_version", { required: true });
     const githubToken = core.getInput("github_token", { required: true });
+    const cacheMode = core.getInput("cache_mode", { required: false });
+    let installRoot: string | null = core.getInput("install_root", { required: false });
+    let cacheModeValue: "none" | "tool-cache" | "cache" = "cache";
+    if (cacheMode == "none") {
+        cacheModeValue = "none";
+    }
+    if (cacheMode == "tool-cache") {
+        cacheModeValue = "tool-cache";
+    }
+    if (installRoot?.length == 0) {
+        installRoot = null;
+    }
     return {
         crystalVersion: crystalVersion,
         shardsVersion: shardsVersion,
         githubToken: githubToken,
+        cacheMode: cacheModeValue,
+        installRoot: installRoot,
     };
 }
 

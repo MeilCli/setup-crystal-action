@@ -1,6 +1,8 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
+import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
+import * as cache from "@actions/cache";
 import * as github from "@actions/github";
 import * as os from "os";
 import * as path from "path";
@@ -79,6 +81,17 @@ export async function installCrystal(option: Option): Promise<string> {
     const installAsset = await getInstallAsset(option);
     const version = toVersion(installAsset.name);
 
+    if (option.cacheMode == "tool-cache") {
+        return await installCrystalToUseToolCache(installAsset, version);
+    } else {
+        return await installCrystalToTemp(installAsset, version, option);
+    }
+}
+
+async function installCrystalToUseToolCache(
+    installAsset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem,
+    version: string
+): Promise<string> {
     let toolPath = tc.find("crystal", version);
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
@@ -90,10 +103,45 @@ export async function installCrystal(option: Option): Promise<string> {
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
     core.addPath(binPath);
-
     await installNeedSoftware();
-
     core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-
     return path.join(toolPath, getChildFolder(installAsset));
+}
+
+async function installCrystalToTemp(
+    installAsset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem,
+    version: string,
+    option: Option
+): Promise<string> {
+    if (option.installRoot == null) {
+        throw new Error("install root is null");
+    }
+
+    const crystalPath = path.join(option.installRoot, "crystal");
+    // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
+    // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
+    const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
+    const cacheKey = `${platform}-crystal-${version}`;
+
+    if (option.cacheMode == "cache") {
+        const fitKey = await cache.restoreCache([binPath], cacheKey);
+        if (fitKey == cacheKey) {
+            core.addPath(binPath);
+            await installNeedSoftware();
+            core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+            return path.join(crystalPath, getChildFolder(installAsset));
+        }
+    }
+
+    const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
+    const extractPath = await tc.extractTar(downloadPath);
+    await io.mv(extractPath, crystalPath);
+
+    if (option.cacheMode == "cache") {
+        await cache.saveCache([binPath], cacheKey);
+    }
+    core.addPath(binPath);
+    await installNeedSoftware();
+    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+    return path.join(crystalPath, getChildFolder(installAsset));
 }
