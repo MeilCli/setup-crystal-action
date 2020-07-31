@@ -144,7 +144,7 @@ async function installCrystalToTemp(
     const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
     const extractPath = await tc.extractTar(downloadPath);
     await io.cp(extractPath, crystalPath, { recursive: true, force: true });
-    await exec.exec(`ls ${crystalPath}`);
+    await exec.exec(`ls ${crystalPath} -R`);
 
     if (option.cacheMode == "cache") {
         await cache.saveCache([crystalPath], cacheKey);
