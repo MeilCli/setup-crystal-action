@@ -131,7 +131,7 @@ async function installShardsToTemp(
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
     // postfix number is internal version by this action
-    const cacheKey = `${platform}-shards-${installAsset.tag_name}-5`;
+    const cacheKey = `${platform}-shards-${installAsset.tag_name}-6`;
 
     try {
         if (option.cacheMode == "cache") {
