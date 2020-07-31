@@ -123,7 +123,7 @@ async function installCrystalToTemp(
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
     // postfix number is internal version by this action
-    const cacheKey = `${platform}-crystal-${version}-6`;
+    const cacheKey = `setup-crystal-${platform}-crystal-${version}-6`;
 
     try {
         if (option.cacheMode == "cache") {
