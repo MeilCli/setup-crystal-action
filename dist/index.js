@@ -32421,11 +32421,13 @@ function installCrystalToTemp(installAsset, version, option) {
         // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
-        const cacheKey = `${platform}-crystal-${version}-`;
+        // postfix number is internal version by this action
+        const cacheKey = `${platform}-crystal-${version}-2`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
                 if (fitKey == cacheKey) {
+                    core.info("cache hit: crystal");
                     core.addPath(binPath);
                     core.info(`crystal bin: ${binPath}`);
                     yield installNeedSoftware();
@@ -35349,11 +35351,13 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         yield installNeedSoftware();
         const shardsPath = path.join(option.installRoot, "shards");
         const binPath = path.join(shardsPath, "bin");
-        const cacheKey = `${platform}-shards-${installAsset.tag_name}-`;
+        // postfix number is internal version by this action
+        const cacheKey = `${platform}-shards-${installAsset.tag_name}-2`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
                 if (fitKey == cacheKey) {
+                    core.info("cache hit: shards");
                     core.addPath(binPath);
                     core.info(`shards bin: ${binPath}`);
                     core.setOutput("installed_shards_json", JSON.stringify(installAsset));
