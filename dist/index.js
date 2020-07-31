@@ -32404,6 +32404,7 @@ function installCrystalToUseToolCache(installAsset, version) {
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
         core.addPath(binPath);
+        core.info(`crystal bin: ${binPath}`);
         yield installNeedSoftware();
         core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
         return path.join(toolPath, getChildFolder(installAsset));
@@ -32424,6 +32425,7 @@ function installCrystalToTemp(installAsset, version, option) {
                 const fitKey = yield cache.restoreCache([binPath], cacheKey);
                 if (fitKey == cacheKey) {
                     core.addPath(binPath);
+                    core.info(`crystal bin: ${binPath}`);
                     yield installNeedSoftware();
                     core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
                     return path.join(crystalPath, getChildFolder(installAsset));
@@ -32440,6 +32442,7 @@ function installCrystalToTemp(installAsset, version, option) {
             yield cache.saveCache([binPath], cacheKey);
         }
         core.addPath(binPath);
+        core.info(`crystal bin: ${binPath}`);
         yield installNeedSoftware();
         core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
         return path.join(crystalPath, getChildFolder(installAsset));
@@ -35332,6 +35335,7 @@ function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
         }
         const binPath = path.join(toolPath, "bin");
         core.addPath(binPath);
+        core.info(`shards bin: ${binPath}`);
         core.setOutput("installed_shards_json", JSON.stringify(installAsset));
     });
 }
@@ -35349,6 +35353,7 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
                 const fitKey = yield cache.restoreCache([binPath], cacheKey);
                 if (fitKey == cacheKey) {
                     core.addPath(binPath);
+                    core.info(`shards bin: ${binPath}`);
                     core.setOutput("installed_shards_json", JSON.stringify(installAsset));
                     return;
                 }
@@ -35379,6 +35384,7 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
             yield cache.saveCache([binPath], cacheKey);
         }
         core.addPath(binPath);
+        core.info(`shards bin: ${binPath}`);
         core.setOutput("installed_shards_json", JSON.stringify(installAsset));
     });
 }
