@@ -130,12 +130,14 @@ async function installShardsToTemp(
 
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
-    const cacheKey = `${platform}-shards-${installAsset.tag_name}-`;
+    // postfix number is internal version by this action
+    const cacheKey = `${platform}-shards-${installAsset.tag_name}-2`;
 
     try {
         if (option.cacheMode == "cache") {
             const fitKey = await cache.restoreCache([shardsPath], cacheKey);
             if (fitKey == cacheKey) {
+                core.info("cache hit: shards");
                 core.addPath(binPath);
                 core.info(`shards bin: ${binPath}`);
                 core.setOutput("installed_shards_json", JSON.stringify(installAsset));
