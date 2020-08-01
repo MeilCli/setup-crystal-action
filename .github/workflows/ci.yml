@@ -101,8 +101,7 @@ jobs:
           command: crystal version
           expect_contain: 'Crystal ${{ matrix.crystal }}'
       - uses: MeilCli/test-command-action@v1
-        # latest crystal is including shards
-        if: matrix.crystal != 'latest' && matrix.shards != 'latest'
+        if: matrix.shards != 'latest'
         name: Check Shards Version
         with:
           command: shards --version
