@@ -94,19 +94,21 @@ async function installShardsToToolCache(
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
         const extractPath = await tc.extractTar(downloadPath);
+        const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
+        const sourcePath = path.join(extractPath, nestedFolder);
 
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
-            await shardsInstall(crystalInstalledPath, extractPath);
+            await shardsInstall(crystalInstalledPath, sourcePath);
             await exec.exec("make", undefined, {
-                cwd: extractPath,
+                cwd: sourcePath,
             });
         } else {
             await exec.exec("make CRFLAGS=--release", undefined, {
-                cwd: extractPath,
+                cwd: sourcePath,
             });
         }
-        toolPath = await tc.cacheDir(extractPath, "shards", installAsset.tag_name);
+        toolPath = await tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
     }
 
     const binPath = path.join(toolPath, "bin");
@@ -152,7 +154,10 @@ async function installShardsToTemp(
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);
     const extractPath = await tc.extractTar(downloadPath);
     await io.cp(extractPath, shardsPath, { recursive: true, force: true });
-    await exec.exec(`ls ${shardsPath} -R`);
+
+    const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
+    await io.cp(path.join(shardsPath, nestedFolder), shardsPath, { recursive: true, force: true });
+
     if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
         // shards changes to require crystal-molinillo on 0.10.0
         await shardsInstall(crystalInstalledPath, shardsPath);

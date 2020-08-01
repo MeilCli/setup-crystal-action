@@ -1615,6 +1615,7 @@ const cache = __importStar(__webpack_require__(692));
 const github = __importStar(__webpack_require__(469));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
+const fs = __importStar(__webpack_require__(747));
 const semver = __importStar(__webpack_require__(876));
 const state_1 = __webpack_require__(77);
 const platform = os.platform();
@@ -1691,19 +1692,21 @@ function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
         if (!toolPath) {
             const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
             const extractPath = yield tc.extractTar(downloadPath);
+            const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
+            const sourcePath = path.join(extractPath, nestedFolder);
             if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
                 // shards changes to require crystal-molinillo on 0.10.0
-                yield shardsInstall(crystalInstalledPath, extractPath);
+                yield shardsInstall(crystalInstalledPath, sourcePath);
                 yield exec.exec("make", undefined, {
-                    cwd: extractPath,
+                    cwd: sourcePath,
                 });
             }
             else {
                 yield exec.exec("make CRFLAGS=--release", undefined, {
-                    cwd: extractPath,
+                    cwd: sourcePath,
                 });
             }
-            toolPath = yield tc.cacheDir(extractPath, "shards", installAsset.tag_name);
+            toolPath = yield tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
         }
         const binPath = path.join(toolPath, "bin");
         core.addPath(binPath);
@@ -1740,7 +1743,8 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
         const extractPath = yield tc.extractTar(downloadPath);
         yield io.cp(extractPath, shardsPath, { recursive: true, force: true });
-        yield exec.exec(`ls ${shardsPath} -R`);
+        const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
+        yield io.cp(path.join(shardsPath, nestedFolder), shardsPath, { recursive: true, force: true });
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
             yield shardsInstall(crystalInstalledPath, shardsPath);
