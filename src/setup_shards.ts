@@ -152,7 +152,7 @@ async function installShardsToTemp(
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);
     const extractPath = await tc.extractTar(downloadPath);
     await io.cp(extractPath, shardsPath, { recursive: true, force: true });
-
+    await exec.exec(`ls ${shardsPath} -R`);
     if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
         // shards changes to require crystal-molinillo on 0.10.0
         await shardsInstall(crystalInstalledPath, shardsPath);
