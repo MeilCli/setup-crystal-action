@@ -84,6 +84,8 @@ jobs:
         with:
           crystal_version: ${{ matrix.crystal }}
           shards_version: ${{ matrix.shards }}
+      - run: crystal version
+      - run: shards --version
       - uses: MeilCli/test-command-action@v1
         if: matrix.crystal != 'latest'
         name: Check Crystal Version
