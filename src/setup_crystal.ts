@@ -8,6 +8,7 @@ import * as os from "os";
 import * as path from "path";
 import { Option } from "./main";
 import { Endpoints } from "@octokit/types";
+import { putCrystalCacheKey } from "./state";
 
 type ReposGetReleaseByTagResponse = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"];
 type ReposGetLatestReleaseResponse = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"];
@@ -123,7 +124,7 @@ async function installCrystalToTemp(
     // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
     const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
     // postfix number is internal version by this action
-    const cacheKey = `setup-crystal-${platform}-crystal-${version}-6`;
+    const cacheKey = `setup-crystal-${platform}-crystal-${version}-7`;
 
     try {
         if (option.cacheMode == "cache") {
@@ -141,13 +142,12 @@ async function installCrystalToTemp(
         core.info("fails cache restore");
     }
 
+    putCrystalCacheKey(cacheKey);
+
     const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
     const extractPath = await tc.extractTar(downloadPath);
     await io.cp(extractPath, crystalPath, { recursive: true, force: true });
 
-    if (option.cacheMode == "cache") {
-        await cache.saveCache([crystalPath], cacheKey);
-    }
     core.addPath(binPath);
     core.info(`crystal bin: ${binPath}`);
     await installNeedSoftware();

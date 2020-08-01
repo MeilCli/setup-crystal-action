@@ -28,4 +28,5 @@ outputs:
     description: 'installed shards asset of crystal-lang/shards Release'
 runs:
   using: 'node12'
-  main: 'dist/index.js'
+  main: 'dist/main/index.js'
+  post: 'dist/post/index.js'

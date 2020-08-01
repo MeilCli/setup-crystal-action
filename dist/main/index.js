@@ -40,7 +40,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(198);
+/******/ 		return __webpack_require__(131);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -1572,7 +1572,200 @@ var ValueType;
 /* 45 */,
 /* 46 */,
 /* 47 */,
-/* 48 */,
+/* 48 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installShards = void 0;
+const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
+const io = __importStar(__webpack_require__(1));
+const tc = __importStar(__webpack_require__(533));
+const cache = __importStar(__webpack_require__(692));
+const github = __importStar(__webpack_require__(469));
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
+const fs = __importStar(__webpack_require__(747));
+const semver = __importStar(__webpack_require__(876));
+const state_1 = __webpack_require__(77);
+const platform = os.platform();
+function getInstallAsset(option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const client = github.getOctokit(option.githubToken);
+        let response;
+        if (option.shardsVersion != "latest") {
+            response = yield client.repos.getReleaseByTag({
+                owner: "crystal-lang",
+                repo: "shards",
+                tag: `v${option.shardsVersion}`,
+            });
+        }
+        else {
+            response = yield client.repos.getLatestRelease({
+                owner: "crystal-lang",
+                repo: "shards",
+            });
+        }
+        if (400 <= response.status) {
+            throw Error("fail get crystal releases");
+        }
+        return response.data;
+    });
+}
+function installNeedSoftware() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (platform == "linux") {
+            yield exec.exec("sudo apt-get install libyaml-dev", undefined);
+        }
+        if (platform == "darwin") {
+            yield exec.exec("brew install libyaml", undefined);
+        }
+    });
+}
+function shardsInstall(crystalInstalledPath, sourcePath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (platform == "linux") {
+            yield exec.exec(`${crystalInstalledPath}/bin/shards install`, undefined, {
+                cwd: sourcePath,
+            });
+        }
+        if (platform == "darwin") {
+            yield exec.exec(`${crystalInstalledPath}/embedded/bin/shards install`, undefined, {
+                cwd: sourcePath,
+            });
+        }
+    });
+}
+function installShards(option, crystalInstalledPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (platform == "win32") {
+            throw Error("setup crystal action not support windows");
+        }
+        if (option.shardsVersion == null && platform == "linux") {
+            return;
+        }
+        const installAsset = yield getInstallAsset(option);
+        yield installNeedSoftware();
+        if (option.cacheMode == "tool-cache") {
+            yield installShardsToToolCache(installAsset, crystalInstalledPath, option);
+        }
+        else {
+            yield installShardsToTemp(installAsset, crystalInstalledPath, option);
+        }
+    });
+}
+exports.installShards = installShards;
+function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield installNeedSoftware();
+        let toolPath = tc.find("shards", installAsset.tag_name);
+        if (!toolPath) {
+            const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
+            const extractPath = yield tc.extractTar(downloadPath);
+            const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
+            const sourcePath = path.join(extractPath, nestedFolder);
+            if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
+                // shards changes to require crystal-molinillo on 0.10.0
+                yield shardsInstall(crystalInstalledPath, sourcePath);
+                yield exec.exec("make", undefined, {
+                    cwd: sourcePath,
+                });
+            }
+            else {
+                yield exec.exec("make CRFLAGS=--release", undefined, {
+                    cwd: sourcePath,
+                });
+            }
+            toolPath = yield tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
+        }
+        const binPath = path.join(toolPath, "bin");
+        core.addPath(binPath);
+        core.info(`shards bin: ${binPath}`);
+        core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+    });
+}
+function installShardsToTemp(installAsset, crystalInstalledPath, option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (option.installRoot == null) {
+            throw new Error("install root is null");
+        }
+        yield installNeedSoftware();
+        const shardsPath = path.join(option.installRoot, "shards");
+        const binPath = path.join(shardsPath, "bin");
+        // postfix number is internal version by this action
+        const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-7`;
+        try {
+            if (option.cacheMode == "cache") {
+                const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
+                if (fitKey == cacheKey) {
+                    core.info("cache hit: shards");
+                    core.addPath(binPath);
+                    core.info(`shards bin: ${binPath}`);
+                    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+                    return;
+                }
+            }
+        }
+        catch (error) {
+            core.info("fails cache restore");
+        }
+        state_1.putShardsCacheKey(cacheKey);
+        const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
+        const extractPath = yield tc.extractTar(downloadPath);
+        yield io.cp(extractPath, shardsPath, { recursive: true, force: true });
+        const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
+        const sourcePath = path.join(shardsPath, nestedFolder);
+        yield io.cp(sourcePath, binPath, { recursive: true, force: true });
+        if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
+            // shards changes to require crystal-molinillo on 0.10.0
+            yield shardsInstall(crystalInstalledPath, binPath);
+            yield exec.exec("make", undefined, {
+                cwd: binPath,
+            });
+        }
+        else {
+            yield exec.exec("make CRFLAGS=--release", undefined, {
+                cwd: binPath,
+            });
+        }
+        core.addPath(binPath);
+        core.info(`shards bin: ${binPath}`);
+        core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+    });
+}
+
+
+/***/ }),
 /* 49 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -1722,7 +1915,74 @@ if (typeof Symbol === undefined || !Symbol.asyncIterator) {
 /* 74 */,
 /* 75 */,
 /* 76 */,
-/* 77 */,
+/* 77 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.putShardsCacheKey = exports.getShardsCacheKey = exports.putCrystalCacheKey = exports.getCrystalCacheKey = exports.putState = exports.getState = void 0;
+const core = __importStar(__webpack_require__(470));
+function getState() {
+    return {
+        requiredSaveCrystalCache: core.getState("required_save_crystal_cache") == "true",
+        requiredSaveShardsCache: core.getState("required_save_shards_cache") == "true",
+        installRoot: core.getState("install_root"),
+    };
+}
+exports.getState = getState;
+function putState(state) {
+    core.saveState("required_save_crystal_cache", state.requiredSaveCrystalCache ? "true" : "false");
+    core.saveState("required_save_shards_cache", state.requiredSaveShardsCache ? "true" : "false");
+    core.saveState("install_root", state.installRoot);
+}
+exports.putState = putState;
+function getCrystalCacheKey() {
+    const key = core.getState("crystal_cache_key");
+    if (key.length == 0) {
+        return null;
+    }
+    return key;
+}
+exports.getCrystalCacheKey = getCrystalCacheKey;
+function putCrystalCacheKey(key) {
+    core.saveState("crystal_cache_key", key);
+}
+exports.putCrystalCacheKey = putCrystalCacheKey;
+function getShardsCacheKey() {
+    const key = core.getState("shards_cache_key");
+    if (key.length == 0) {
+        return null;
+    }
+    return key;
+}
+exports.getShardsCacheKey = getShardsCacheKey;
+function putShardsCacheKey(key) {
+    core.saveState("shards_cache_key", key);
+}
+exports.putShardsCacheKey = putShardsCacheKey;
+
+
+/***/ }),
 /* 78 */,
 /* 79 */,
 /* 80 */,
@@ -3993,7 +4253,96 @@ module.exports = require("child_process");
 
 /***/ }),
 /* 130 */,
-/* 131 */,
+/* 131 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
+const setup_crystal_1 = __webpack_require__(197);
+const setup_shards_1 = __webpack_require__(48);
+const state_1 = __webpack_require__(77);
+function getOption() {
+    const crystalVersion = core.getInput("crystal_version", { required: true });
+    const shardsVersion = core.getInput("shards_version", { required: true });
+    const githubToken = core.getInput("github_token", { required: true });
+    const cacheMode = core.getInput("cache_mode", { required: false });
+    let installRoot = core.getInput("install_root", { required: false });
+    let cacheModeValue = "cache";
+    if (cacheMode == "none") {
+        cacheModeValue = "none";
+    }
+    if (cacheMode == "tool-cache") {
+        cacheModeValue = "tool-cache";
+    }
+    if ((installRoot === null || installRoot === void 0 ? void 0 : installRoot.length) == 0) {
+        installRoot = null;
+    }
+    return {
+        crystalVersion: crystalVersion,
+        shardsVersion: shardsVersion,
+        githubToken: githubToken,
+        cacheMode: cacheModeValue,
+        installRoot: installRoot,
+    };
+}
+function run() {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const option = getOption();
+            const crystalInstalledPath = yield setup_crystal_1.installCrystal(option);
+            yield exec.exec("crystal version");
+            if (option.shardsVersion != "skip") {
+                yield setup_shards_1.installShards(option, crystalInstalledPath);
+            }
+            if (option.cacheMode == "cache") {
+                state_1.putState({
+                    requiredSaveCrystalCache: true,
+                    requiredSaveShardsCache: option.shardsVersion != "skip",
+                    installRoot: (_a = option.installRoot) !== null && _a !== void 0 ? _a : "",
+                });
+            }
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
+}
+run();
+
+
+/***/ }),
 /* 132 */,
 /* 133 */,
 /* 134 */,
@@ -5057,57 +5406,6 @@ module.exports = {
 
 "use strict";
 
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _validate = _interopRequireDefault(__webpack_require__(676));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function parse(uuid) {
-  if (!(0, _validate.default)(uuid)) {
-    throw TypeError('Invalid UUID');
-  }
-
-  let v;
-  const arr = new Uint8Array(16); // Parse ########-....-....-....-............
-
-  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
-  arr[1] = v >>> 16 & 0xff;
-  arr[2] = v >>> 8 & 0xff;
-  arr[3] = v & 0xff; // Parse ........-####-....-....-............
-
-  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
-  arr[5] = v & 0xff; // Parse ........-....-####-....-............
-
-  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
-  arr[7] = v & 0xff; // Parse ........-....-....-####-............
-
-  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
-  arr[9] = v & 0xff; // Parse ........-....-....-....-############
-  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
-
-  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
-  arr[11] = v / 0x100000000 & 0xff;
-  arr[12] = v >>> 24 & 0xff;
-  arr[13] = v >>> 16 & 0xff;
-  arr[14] = v >>> 8 & 0xff;
-  arr[15] = v & 0xff;
-  return arr;
-}
-
-var _default = parse;
-exports.default = _default;
-
-/***/ }),
-/* 198 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -5137,53 +5435,144 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.installCrystal = exports.toVersion = void 0;
 const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
-const setup_crystal_1 = __webpack_require__(442);
-const setup_shards_1 = __webpack_require__(482);
-function getOption() {
-    const crystalVersion = core.getInput("crystal_version", { required: true });
-    const shardsVersion = core.getInput("shards_version", { required: true });
-    const githubToken = core.getInput("github_token", { required: true });
-    const cacheMode = core.getInput("cache_mode", { required: false });
-    let installRoot = core.getInput("install_root", { required: false });
-    let cacheModeValue = "cache";
-    if (cacheMode == "none") {
-        cacheModeValue = "none";
-    }
-    if (cacheMode == "tool-cache") {
-        cacheModeValue = "tool-cache";
-    }
-    if ((installRoot === null || installRoot === void 0 ? void 0 : installRoot.length) == 0) {
-        installRoot = null;
-    }
-    return {
-        crystalVersion: crystalVersion,
-        shardsVersion: shardsVersion,
-        githubToken: githubToken,
-        cacheMode: cacheModeValue,
-        installRoot: installRoot,
-    };
-}
-function run() {
+const io = __importStar(__webpack_require__(1));
+const tc = __importStar(__webpack_require__(533));
+const cache = __importStar(__webpack_require__(692));
+const github = __importStar(__webpack_require__(469));
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
+const state_1 = __webpack_require__(77);
+const platform = os.platform();
+function getInstallAsset(option) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const option = getOption();
-            const crystalInstalledPath = yield setup_crystal_1.installCrystal(option);
-            yield exec.exec("crystal version");
-            if (option.shardsVersion != "skip") {
-                yield setup_shards_1.installShards(option, crystalInstalledPath);
-            }
+        const client = github.getOctokit(option.githubToken);
+        let response;
+        if (option.crystalVersion != "latest") {
+            response = yield client.repos.getReleaseByTag({
+                owner: "crystal-lang",
+                repo: "crystal",
+                tag: option.crystalVersion,
+            });
         }
-        catch (error) {
-            core.setFailed(error.message);
+        else {
+            response = yield client.repos.getLatestRelease({
+                owner: "crystal-lang",
+                repo: "crystal",
+            });
+        }
+        if (400 <= response.status) {
+            throw Error("fail get crystal releases");
+        }
+        const assets = [];
+        for (const asset of response.data.assets) {
+            assets.push(asset);
+        }
+        const fileUrls = assets.filter((x) => {
+            if (platform == "darwin") {
+                return x.name.endsWith("-darwin-x86_64.tar.gz");
+            }
+            else {
+                return x.name.endsWith("-linux-x86_64.tar.gz");
+            }
+        });
+        const fileUrl = fileUrls.sort()[fileUrls.length - 1];
+        return fileUrl;
+    });
+}
+function installNeedSoftware() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (platform == "linux") {
+            yield exec.exec("sudo apt-get install libevent-dev", undefined);
         }
     });
 }
-run();
+function toVersion(name) {
+    return name.replace("crystal-", "").replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
+}
+exports.toVersion = toVersion;
+function getChildFolder(asset) {
+    return asset.name.replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
+}
+// return installed location
+function installCrystal(option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (platform == "win32") {
+            throw Error("setup crystal action not support windows");
+        }
+        const installAsset = yield getInstallAsset(option);
+        const version = toVersion(installAsset.name);
+        if (option.cacheMode == "tool-cache") {
+            return yield installCrystalToUseToolCache(installAsset, version);
+        }
+        else {
+            return yield installCrystalToTemp(installAsset, version, option);
+        }
+    });
+}
+exports.installCrystal = installCrystal;
+function installCrystalToUseToolCache(installAsset, version) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let toolPath = tc.find("crystal", version);
+        if (!toolPath) {
+            const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
+            const extractPath = yield tc.extractTar(downloadPath);
+            toolPath = yield tc.cacheDir(extractPath, "crystal", version);
+        }
+        // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
+        // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
+        const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
+        core.addPath(binPath);
+        core.info(`crystal bin: ${binPath}`);
+        yield installNeedSoftware();
+        core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+        return path.join(toolPath, getChildFolder(installAsset));
+    });
+}
+function installCrystalToTemp(installAsset, version, option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (option.installRoot == null) {
+            throw new Error("install root is null");
+        }
+        const crystalPath = path.join(option.installRoot, "crystal");
+        // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
+        // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
+        const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
+        // postfix number is internal version by this action
+        const cacheKey = `setup-crystal-${platform}-crystal-${version}-7`;
+        try {
+            if (option.cacheMode == "cache") {
+                const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
+                if (fitKey == cacheKey) {
+                    core.info("cache hit: crystal");
+                    core.addPath(binPath);
+                    core.info(`crystal bin: ${binPath}`);
+                    yield installNeedSoftware();
+                    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+                    return path.join(crystalPath, getChildFolder(installAsset));
+                }
+            }
+        }
+        catch (error) {
+            core.info("fails cache restore");
+        }
+        state_1.putCrystalCacheKey(cacheKey);
+        const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
+        const extractPath = yield tc.extractTar(downloadPath);
+        yield io.cp(extractPath, crystalPath, { recursive: true, force: true });
+        core.addPath(binPath);
+        core.info(`crystal bin: ${binPath}`);
+        yield installNeedSoftware();
+        core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+        return path.join(crystalPath, getChildFolder(installAsset));
+    });
+}
 
 
 /***/ }),
+/* 198 */,
 /* 199 */,
 /* 200 */,
 /* 201 */,
@@ -5726,7 +6115,7 @@ exports.URL = exports.DNS = void 0;
 
 var _stringify = _interopRequireDefault(__webpack_require__(855));
 
-var _parse = _interopRequireDefault(__webpack_require__(197));
+var _parse = _interopRequireDefault(__webpack_require__(287));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7724,7 +8113,57 @@ module.exports = compareLoose
 /* 284 */,
 /* 285 */,
 /* 286 */,
-/* 287 */,
+/* 287 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _validate = _interopRequireDefault(__webpack_require__(676));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function parse(uuid) {
+  if (!(0, _validate.default)(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+
+  let v;
+  const arr = new Uint8Array(16); // Parse ########-....-....-....-............
+
+  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
+  arr[1] = v >>> 16 & 0xff;
+  arr[2] = v >>> 8 & 0xff;
+  arr[3] = v & 0xff; // Parse ........-####-....-....-............
+
+  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
+  arr[5] = v & 0xff; // Parse ........-....-####-....-............
+
+  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
+  arr[7] = v & 0xff; // Parse ........-....-....-####-............
+
+  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
+  arr[9] = v & 0xff; // Parse ........-....-....-....-############
+  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
+
+  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
+  arr[11] = v / 0x100000000 & 0xff;
+  arr[12] = v >>> 24 & 0xff;
+  arr[13] = v >>> 16 & 0xff;
+  arr[14] = v >>> 8 & 0xff;
+  arr[15] = v & 0xff;
+  return arr;
+}
+
+var _default = parse;
+exports.default = _default;
+
+/***/ }),
 /* 288 */,
 /* 289 */,
 /* 290 */,
@@ -32283,178 +32722,7 @@ exports.default = {
 
 /***/ }),
 /* 441 */,
-/* 442 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.installCrystal = exports.toVersion = void 0;
-const core = __importStar(__webpack_require__(470));
-const exec = __importStar(__webpack_require__(986));
-const io = __importStar(__webpack_require__(1));
-const tc = __importStar(__webpack_require__(533));
-const cache = __importStar(__webpack_require__(692));
-const github = __importStar(__webpack_require__(469));
-const os = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
-const platform = os.platform();
-function getInstallAsset(option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const client = github.getOctokit(option.githubToken);
-        let response;
-        if (option.crystalVersion != "latest") {
-            response = yield client.repos.getReleaseByTag({
-                owner: "crystal-lang",
-                repo: "crystal",
-                tag: option.crystalVersion,
-            });
-        }
-        else {
-            response = yield client.repos.getLatestRelease({
-                owner: "crystal-lang",
-                repo: "crystal",
-            });
-        }
-        if (400 <= response.status) {
-            throw Error("fail get crystal releases");
-        }
-        const assets = [];
-        for (const asset of response.data.assets) {
-            assets.push(asset);
-        }
-        const fileUrls = assets.filter((x) => {
-            if (platform == "darwin") {
-                return x.name.endsWith("-darwin-x86_64.tar.gz");
-            }
-            else {
-                return x.name.endsWith("-linux-x86_64.tar.gz");
-            }
-        });
-        const fileUrl = fileUrls.sort()[fileUrls.length - 1];
-        return fileUrl;
-    });
-}
-function installNeedSoftware() {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "linux") {
-            yield exec.exec("sudo apt-get install libevent-dev", undefined);
-        }
-    });
-}
-function toVersion(name) {
-    return name.replace("crystal-", "").replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
-}
-exports.toVersion = toVersion;
-function getChildFolder(asset) {
-    return asset.name.replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
-}
-// return installed location
-function installCrystal(option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "win32") {
-            throw Error("setup crystal action not support windows");
-        }
-        const installAsset = yield getInstallAsset(option);
-        const version = toVersion(installAsset.name);
-        if (option.cacheMode == "tool-cache") {
-            return yield installCrystalToUseToolCache(installAsset, version);
-        }
-        else {
-            return yield installCrystalToTemp(installAsset, version, option);
-        }
-    });
-}
-exports.installCrystal = installCrystal;
-function installCrystalToUseToolCache(installAsset, version) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let toolPath = tc.find("crystal", version);
-        if (!toolPath) {
-            const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
-            const extractPath = yield tc.extractTar(downloadPath);
-            toolPath = yield tc.cacheDir(extractPath, "crystal", version);
-        }
-        // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
-        // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
-        const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
-        core.addPath(binPath);
-        core.info(`crystal bin: ${binPath}`);
-        yield installNeedSoftware();
-        core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-        return path.join(toolPath, getChildFolder(installAsset));
-    });
-}
-function installCrystalToTemp(installAsset, version, option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (option.installRoot == null) {
-            throw new Error("install root is null");
-        }
-        const crystalPath = path.join(option.installRoot, "crystal");
-        // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
-        // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
-        const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
-        // postfix number is internal version by this action
-        const cacheKey = `setup-crystal-${platform}-crystal-${version}-6`;
-        try {
-            if (option.cacheMode == "cache") {
-                const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
-                if (fitKey == cacheKey) {
-                    core.info("cache hit: crystal");
-                    core.addPath(binPath);
-                    core.info(`crystal bin: ${binPath}`);
-                    yield installNeedSoftware();
-                    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-                    return path.join(crystalPath, getChildFolder(installAsset));
-                }
-            }
-        }
-        catch (error) {
-            core.info("fails cache restore");
-        }
-        const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
-        const extractPath = yield tc.extractTar(downloadPath);
-        yield io.cp(extractPath, crystalPath, { recursive: true, force: true });
-        if (option.cacheMode == "cache") {
-            yield cache.saveCache([crystalPath], cacheKey);
-        }
-        core.addPath(binPath);
-        core.info(`crystal bin: ${binPath}`);
-        yield installNeedSoftware();
-        core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-        return path.join(crystalPath, getChildFolder(installAsset));
-    });
-}
-
-
-/***/ }),
+/* 442 */,
 /* 443 */,
 /* 444 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -35202,201 +35470,7 @@ module.exports = validRange
 
 /***/ }),
 /* 481 */,
-/* 482 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.installShards = void 0;
-const core = __importStar(__webpack_require__(470));
-const exec = __importStar(__webpack_require__(986));
-const io = __importStar(__webpack_require__(1));
-const tc = __importStar(__webpack_require__(533));
-const cache = __importStar(__webpack_require__(692));
-const github = __importStar(__webpack_require__(469));
-const os = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
-const fs = __importStar(__webpack_require__(747));
-const semver = __importStar(__webpack_require__(876));
-const platform = os.platform();
-function getInstallAsset(option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const client = github.getOctokit(option.githubToken);
-        let response;
-        if (option.shardsVersion != "latest") {
-            response = yield client.repos.getReleaseByTag({
-                owner: "crystal-lang",
-                repo: "shards",
-                tag: `v${option.shardsVersion}`,
-            });
-        }
-        else {
-            response = yield client.repos.getLatestRelease({
-                owner: "crystal-lang",
-                repo: "shards",
-            });
-        }
-        if (400 <= response.status) {
-            throw Error("fail get crystal releases");
-        }
-        return response.data;
-    });
-}
-function installNeedSoftware() {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "linux") {
-            yield exec.exec("sudo apt-get install libyaml-dev", undefined);
-        }
-        if (platform == "darwin") {
-            yield exec.exec("brew install libyaml", undefined);
-        }
-    });
-}
-function shardsInstall(crystalInstalledPath, sourcePath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "linux") {
-            yield exec.exec(`${crystalInstalledPath}/bin/shards install`, undefined, {
-                cwd: sourcePath,
-            });
-        }
-        if (platform == "darwin") {
-            yield exec.exec(`${crystalInstalledPath}/embedded/bin/shards install`, undefined, {
-                cwd: sourcePath,
-            });
-        }
-    });
-}
-function installShards(option, crystalInstalledPath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "win32") {
-            throw Error("setup crystal action not support windows");
-        }
-        if (option.shardsVersion == null && platform == "linux") {
-            return;
-        }
-        const installAsset = yield getInstallAsset(option);
-        yield installNeedSoftware();
-        if (option.cacheMode == "tool-cache") {
-            yield installShardsToToolCache(installAsset, crystalInstalledPath, option);
-        }
-        else {
-            yield installShardsToTemp(installAsset, crystalInstalledPath, option);
-        }
-    });
-}
-exports.installShards = installShards;
-function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield installNeedSoftware();
-        let toolPath = tc.find("shards", installAsset.tag_name);
-        if (!toolPath) {
-            const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
-            const extractPath = yield tc.extractTar(downloadPath);
-            const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
-            const sourcePath = path.join(extractPath, nestedFolder);
-            if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
-                // shards changes to require crystal-molinillo on 0.10.0
-                yield shardsInstall(crystalInstalledPath, sourcePath);
-                yield exec.exec("make", undefined, {
-                    cwd: sourcePath,
-                });
-            }
-            else {
-                yield exec.exec("make CRFLAGS=--release", undefined, {
-                    cwd: sourcePath,
-                });
-            }
-            toolPath = yield tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
-        }
-        const binPath = path.join(toolPath, "bin");
-        core.addPath(binPath);
-        core.info(`shards bin: ${binPath}`);
-        core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-    });
-}
-function installShardsToTemp(installAsset, crystalInstalledPath, option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (option.installRoot == null) {
-            throw new Error("install root is null");
-        }
-        yield installNeedSoftware();
-        const shardsPath = path.join(option.installRoot, "shards");
-        const binPath = path.join(shardsPath, "bin");
-        // postfix number is internal version by this action
-        const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-6`;
-        try {
-            if (option.cacheMode == "cache") {
-                const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
-                if (fitKey == cacheKey) {
-                    core.info("cache hit: shards");
-                    core.addPath(binPath);
-                    core.info(`shards bin: ${binPath}`);
-                    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-                    return;
-                }
-            }
-        }
-        catch (error) {
-            core.info("fails cache restore");
-        }
-        const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
-        const extractPath = yield tc.extractTar(downloadPath);
-        yield io.cp(extractPath, shardsPath, { recursive: true, force: true });
-        const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
-        const sourcePath = path.join(shardsPath, nestedFolder);
-        yield io.cp(sourcePath, binPath, { recursive: true, force: true });
-        if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
-            // shards changes to require crystal-molinillo on 0.10.0
-            yield shardsInstall(crystalInstalledPath, binPath);
-            yield exec.exec("make", undefined, {
-                cwd: binPath,
-            });
-        }
-        else {
-            yield exec.exec("make CRFLAGS=--release", undefined, {
-                cwd: binPath,
-            });
-        }
-        if (option.cacheMode == "cache") {
-            yield cache.saveCache([shardsPath], cacheKey);
-        }
-        core.addPath(binPath);
-        core.info(`shards bin: ${binPath}`);
-        core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-    });
-}
-
-
-/***/ }),
+/* 482 */,
 /* 483 */,
 /* 484 */,
 /* 485 */,
@@ -39776,7 +39850,7 @@ var _validate = _interopRequireDefault(__webpack_require__(676));
 
 var _stringify = _interopRequireDefault(__webpack_require__(855));
 
-var _parse = _interopRequireDefault(__webpack_require__(197));
+var _parse = _interopRequireDefault(__webpack_require__(287));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 

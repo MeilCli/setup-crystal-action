@@ -2,6 +2,7 @@ import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import { installCrystal } from "./setup_crystal";
 import { installShards } from "./setup_shards";
+import { putState } from "./state";
 
 export interface Option {
     crystalVersion: string;
@@ -43,6 +44,13 @@ async function run() {
         await exec.exec("crystal version");
         if (option.shardsVersion != "skip") {
             await installShards(option, crystalInstalledPath);
+        }
+        if (option.cacheMode == "cache") {
+            putState({
+                requiredSaveCrystalCache: true,
+                requiredSaveShardsCache: option.shardsVersion != "skip",
+                installRoot: option.installRoot ?? "",
+            });
         }
     } catch (error) {
         core.setFailed(error.message);

@@ -10,6 +10,7 @@ import * as fs from "fs";
 import * as semver from "semver";
 import { Option } from "./main";
 import { Endpoints } from "@octokit/types";
+import { putShardsCacheKey } from "./state";
 
 type ReposGetReleaseByTagResponse = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"];
 type ReposGetLatestReleaseResponse = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"];
@@ -131,7 +132,7 @@ async function installShardsToTemp(
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
     // postfix number is internal version by this action
-    const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-6`;
+    const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-7`;
 
     try {
         if (option.cacheMode == "cache") {
@@ -147,6 +148,8 @@ async function installShardsToTemp(
     } catch (error) {
         core.info("fails cache restore");
     }
+
+    putShardsCacheKey(cacheKey);
 
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);
     const extractPath = await tc.extractTar(downloadPath);
@@ -165,10 +168,6 @@ async function installShardsToTemp(
         await exec.exec("make CRFLAGS=--release", undefined, {
             cwd: binPath,
         });
-    }
-
-    if (option.cacheMode == "cache") {
-        await cache.saveCache([shardsPath], cacheKey);
     }
 
     core.addPath(binPath);
