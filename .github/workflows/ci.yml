@@ -37,6 +37,7 @@ jobs:
     strategy:
       matrix:
         # crystal 0.34.0 has breaking change, shards 0.10.0 needs crsytal 0.34.0, and shards 0.9.0 needs less than or equal to crystal 0.33.0
+        # ubuntu-18.04 fails shards 0.10.0: https://forum.crystal-lang.org/t/compiling-an-app-to-work-on-both-ubuntu-16-and-18/328
         os: [ubuntu-16.04, ubuntu-18.04, macos-10.15]
         crystal: [0.33.0, 0.34.0, latest]
         shards: [0.9.0, 0.10.0, latest]
@@ -90,6 +91,7 @@ jobs:
         with:
           crystal_version: ${{ matrix.crystal }}
           shards_version: ${{ matrix.shards }}
+          cache_prefix: '${{ matrix.os }}-${{ matrix.crystal }}-${{ matrix.shards }}-'
       - run: crystal version
       - run: shards --version
       - uses: MeilCli/test-command-action@v1

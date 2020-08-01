@@ -132,7 +132,7 @@ async function installShardsToTemp(
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
     // postfix number is internal version by this action
-    const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
+    const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
 
     try {
         if (option.cacheMode == "cache") {

@@ -9,6 +9,7 @@ export interface Option {
     shardsVersion: string;
     githubToken: string;
     cacheMode: "none" | "tool-cache" | "cache";
+    cachePrefix: string;
     installRoot: string | null;
 }
 
@@ -17,6 +18,7 @@ function getOption(): Option {
     const shardsVersion = core.getInput("shards_version", { required: true });
     const githubToken = core.getInput("github_token", { required: true });
     const cacheMode = core.getInput("cache_mode", { required: false });
+    const cachePrefix = core.getInput("cache_prefix", { required: false });
     let installRoot: string | null = core.getInput("install_root", { required: false });
     let cacheModeValue: "none" | "tool-cache" | "cache" = "cache";
     if (cacheMode == "none") {
@@ -33,6 +35,7 @@ function getOption(): Option {
         shardsVersion: shardsVersion,
         githubToken: githubToken,
         cacheMode: cacheModeValue,
+        cachePrefix: cachePrefix,
         installRoot: installRoot,
     };
 }

@@ -18,6 +18,8 @@ inputs:
     default: ${{ github.token }}
   cache_mode:
     description: 'cache mode, value: none, tool-cache or cache, default: cache'
+  cache_prefix:
+    description: 'if selected cache on cache_mode, option that prefix of cache key'
   install_root:
     description: 'if selected none or cache on cache_mode, use directory that dicide at this option'
     default: ${{ runner.temp }}

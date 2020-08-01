@@ -1723,7 +1723,7 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const shardsPath = path.join(option.installRoot, "shards");
         const binPath = path.join(shardsPath, "bin");
         // postfix number is internal version by this action
-        const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
+        const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
@@ -4295,6 +4295,7 @@ function getOption() {
     const shardsVersion = core.getInput("shards_version", { required: true });
     const githubToken = core.getInput("github_token", { required: true });
     const cacheMode = core.getInput("cache_mode", { required: false });
+    const cachePrefix = core.getInput("cache_prefix", { required: false });
     let installRoot = core.getInput("install_root", { required: false });
     let cacheModeValue = "cache";
     if (cacheMode == "none") {
@@ -4311,6 +4312,7 @@ function getOption() {
         shardsVersion: shardsVersion,
         githubToken: githubToken,
         cacheMode: cacheModeValue,
+        cachePrefix: cachePrefix,
         installRoot: installRoot,
     };
 }
@@ -5539,7 +5541,7 @@ function installCrystalToTemp(installAsset, version, option) {
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
         // postfix number is internal version by this action
-        const cacheKey = `setup-crystal-${platform}-crystal-${version}-8`;
+        const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-crystal-${version}-8`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
