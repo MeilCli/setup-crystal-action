@@ -1742,11 +1742,9 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         state_1.putShardsCacheKey(cacheKey);
         const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
         const extractPath = yield tc.extractTar(downloadPath);
-        yield io.cp(extractPath, shardsPath, { recursive: true, force: true });
-        const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
-        yield exec.exec(`ls ${shardsPath} -R`);
-        yield io.mv(path.join(shardsPath, nestedFolder), shardsPath, { force: true });
-        core.info(`${path.join(shardsPath, nestedFolder)} move to ${shardsPath}`);
+        const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
+        yield io.cp(path.join(extractPath, nestedFolder), shardsPath, { recursive: true, force: true });
+        core.info(`${path.join(extractPath, nestedFolder)} copy to ${shardsPath}`);
         yield exec.exec(`ls ${shardsPath} -R`);
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
