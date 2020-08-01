@@ -1,6 +1,6 @@
 # setup-crystal-action
 ![](https://github.com/MeilCli/setup-crystal-action/workflows/CI/badge.svg)  
-JavaScript based setup Crystal action for GitHub Actions.  
+setup Crystal action for GitHub Actions.  
 
 ## Required
 `setup-crystal-action` must execute on Linux or macOS, because I do not know usage that WSL on GitHub Actions.
@@ -21,7 +21,7 @@ jobs:
   example:
     runs-on: ubuntu-16.04
     steps:
-      - uses: MeilCli/setup-crystal-action@v3
+      - uses: MeilCli/setup-crystal-action@v4
         with: 
           crystal_version: 0.34.0
           shards_version: 0.10.0
@@ -31,7 +31,7 @@ jobs:
           crystal run hello.cr
 ```
 
-You can also pin to a [specific release](https://github.com/MeilCli/setup-crystal-action/releases) version in the format `@v3.x.x`
+You can also pin to a [specific release](https://github.com/MeilCli/setup-crystal-action/releases) version in the format `@v4.x.x`
 
 ## input
 - `crystal_version`
@@ -47,7 +47,23 @@ You can also pin to a [specific release](https://github.com/MeilCli/setup-crysta
   - default: `latest`
 - `github_token`
   - github token, using get GitHub Release of crystal-lang/crystal or crystal-lang/shards
-  - default: `GITHUB_TOKEN`
+  - default: `${{ github.token }}`
+- `cache_mode`
+  - cache mode
+  - value: `none`, `tool-cache` or `cache`
+  - default: `cache`
+  - `tool-cache`
+    - using: [@actions/tool-cache](https://github.com/actions/toolkit/tree/main/packages/tool-cache)
+    - works in most cases with Self-Hosted Runner
+  - `cache`
+    - using: [@actions/cache](https://github.com/actions/toolkit/tree/main/packages/cache)
+    - works the same as [actions/cache](https://github.com/actions/cache)
+- `cache_prefix`
+  - if selected `cache` on cache_mode, option that prefix of cache key
+  - Recommended use when parallel jobs
+- `install_root`
+  - if selected `none` or `cache` on cache_mode, use directory that dicide at this option
+  - default: `${{ runner.temp }}`
 
 ## output
 - `installed_crystal_json`
