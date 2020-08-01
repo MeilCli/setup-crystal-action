@@ -94,21 +94,19 @@ async function installShardsToToolCache(
     if (!toolPath) {
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
         const extractPath = await tc.extractTar(downloadPath);
-        const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
-        const sourcePath = path.join(extractPath, nestedFolder);
 
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
-            await shardsInstall(crystalInstalledPath, sourcePath);
+            await shardsInstall(crystalInstalledPath, extractPath);
             await exec.exec("make", undefined, {
-                cwd: sourcePath,
+                cwd: extractPath,
             });
         } else {
             await exec.exec("make CRFLAGS=--release", undefined, {
-                cwd: sourcePath,
+                cwd: extractPath,
             });
         }
-        toolPath = await tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
+        toolPath = await tc.cacheDir(extractPath, "shards", installAsset.tag_name);
     }
 
     const binPath = path.join(toolPath, "bin");
@@ -132,7 +130,7 @@ async function installShardsToTemp(
     const shardsPath = path.join(option.installRoot, "shards");
     const binPath = path.join(shardsPath, "bin");
     // postfix number is internal version by this action
-    const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-7`;
+    const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
 
     try {
         if (option.cacheMode == "cache") {
@@ -154,19 +152,16 @@ async function installShardsToTemp(
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);
     const extractPath = await tc.extractTar(downloadPath);
     await io.cp(extractPath, shardsPath, { recursive: true, force: true });
-    const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
-    const sourcePath = path.join(shardsPath, nestedFolder);
-    await io.cp(sourcePath, binPath, { recursive: true, force: true });
 
     if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
         // shards changes to require crystal-molinillo on 0.10.0
-        await shardsInstall(crystalInstalledPath, binPath);
+        await shardsInstall(crystalInstalledPath, shardsPath);
         await exec.exec("make", undefined, {
-            cwd: binPath,
+            cwd: shardsPath,
         });
     } else {
         await exec.exec("make CRFLAGS=--release", undefined, {
-            cwd: binPath,
+            cwd: shardsPath,
         });
     }
 

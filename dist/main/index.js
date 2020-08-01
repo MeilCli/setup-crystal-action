@@ -1615,7 +1615,6 @@ const cache = __importStar(__webpack_require__(692));
 const github = __importStar(__webpack_require__(469));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
-const fs = __importStar(__webpack_require__(747));
 const semver = __importStar(__webpack_require__(876));
 const state_1 = __webpack_require__(77);
 const platform = os.platform();
@@ -1692,21 +1691,19 @@ function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
         if (!toolPath) {
             const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
             const extractPath = yield tc.extractTar(downloadPath);
-            const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
-            const sourcePath = path.join(extractPath, nestedFolder);
             if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
                 // shards changes to require crystal-molinillo on 0.10.0
-                yield shardsInstall(crystalInstalledPath, sourcePath);
+                yield shardsInstall(crystalInstalledPath, extractPath);
                 yield exec.exec("make", undefined, {
-                    cwd: sourcePath,
+                    cwd: extractPath,
                 });
             }
             else {
                 yield exec.exec("make CRFLAGS=--release", undefined, {
-                    cwd: sourcePath,
+                    cwd: extractPath,
                 });
             }
-            toolPath = yield tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
+            toolPath = yield tc.cacheDir(extractPath, "shards", installAsset.tag_name);
         }
         const binPath = path.join(toolPath, "bin");
         core.addPath(binPath);
@@ -1723,7 +1720,7 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const shardsPath = path.join(option.installRoot, "shards");
         const binPath = path.join(shardsPath, "bin");
         // postfix number is internal version by this action
-        const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-7`;
+        const cacheKey = `setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
@@ -1743,19 +1740,16 @@ function installShardsToTemp(installAsset, crystalInstalledPath, option) {
         const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
         const extractPath = yield tc.extractTar(downloadPath);
         yield io.cp(extractPath, shardsPath, { recursive: true, force: true });
-        const nestedFolder = fs.readdirSync(shardsPath).filter((x) => x.startsWith("crystal"))[0];
-        const sourcePath = path.join(shardsPath, nestedFolder);
-        yield io.cp(sourcePath, binPath, { recursive: true, force: true });
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
-            yield shardsInstall(crystalInstalledPath, binPath);
+            yield shardsInstall(crystalInstalledPath, shardsPath);
             yield exec.exec("make", undefined, {
-                cwd: binPath,
+                cwd: shardsPath,
             });
         }
         else {
             yield exec.exec("make CRFLAGS=--release", undefined, {
-                cwd: binPath,
+                cwd: shardsPath,
             });
         }
         core.addPath(binPath);
@@ -5541,7 +5535,7 @@ function installCrystalToTemp(installAsset, version, option) {
         // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
         const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
         // postfix number is internal version by this action
-        const cacheKey = `setup-crystal-${platform}-crystal-${version}-7`;
+        const cacheKey = `setup-crystal-${platform}-crystal-${version}-8`;
         try {
             if (option.cacheMode == "cache") {
                 const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
