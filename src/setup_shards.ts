@@ -156,8 +156,6 @@ async function installShardsToTemp(
     const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
     await io.cp(path.join(extractPath, nestedFolder), shardsPath, { recursive: true, force: true });
 
-    core.info(`${path.join(extractPath, nestedFolder)} copy to ${shardsPath}`);
-    await exec.exec(`ls ${shardsPath} -R`);
     if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
         // shards changes to require crystal-molinillo on 0.10.0
         await shardsInstall(crystalInstalledPath, shardsPath);
