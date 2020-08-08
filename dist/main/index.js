@@ -1571,7 +1571,30 @@ var ValueType;
 /* 44 */,
 /* 45 */,
 /* 46 */,
-/* 47 */,
+/* 47 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=types.js.map
+
+/***/ }),
 /* 48 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -3200,7 +3223,30 @@ var _default = version;
 exports.default = _default;
 
 /***/ }),
-/* 105 */,
+/* 105 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=link.js.map
+
+/***/ }),
 /* 106 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -3475,8 +3521,488 @@ exports.AbortSignal = AbortSignal;
 /***/ }),
 /* 107 */,
 /* 108 */,
-/* 109 */,
-/* 110 */,
+/* 109 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Time.js.map
+
+/***/ }),
+/* 110 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+/*!
+ * Copyright (c) Microsoft and contributors. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for
+ * license information.
+ * 
+ * Azure Core LRO SDK for JavaScript - 1.0.2
+ */
+
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var tslib = __webpack_require__(422);
+
+// Copyright (c) Microsoft Corporation.
+/**
+ * When a poller is manually stopped through the `stopPolling` method,
+ * the poller will be rejected with an instance of the PollerStoppedError.
+ */
+var PollerStoppedError = /** @class */ (function (_super) {
+    tslib.__extends(PollerStoppedError, _super);
+    function PollerStoppedError(message) {
+        var _this = _super.call(this, message) || this;
+        _this.name = "PollerStoppedError";
+        Object.setPrototypeOf(_this, PollerStoppedError.prototype);
+        return _this;
+    }
+    return PollerStoppedError;
+}(Error));
+/**
+ * When a poller is cancelled through the `cancelOperation` method,
+ * the poller will be rejected with an instance of the PollerCancelledError.
+ */
+var PollerCancelledError = /** @class */ (function (_super) {
+    tslib.__extends(PollerCancelledError, _super);
+    function PollerCancelledError(message) {
+        var _this = _super.call(this, message) || this;
+        _this.name = "PollerCancelledError";
+        Object.setPrototypeOf(_this, PollerCancelledError.prototype);
+        return _this;
+    }
+    return PollerCancelledError;
+}(Error));
+/**
+ * A class that represents the definition of a program that polls through consecutive requests
+ * until it reaches a state of completion.
+ *
+ * A poller can be executed manually, by polling request by request by calling to the `poll()` method repeatedly, until its operation is completed.
+ * It also provides a way to wait until the operation completes, by calling `pollUntilDone()` and waiting until the operation finishes.
+ * Pollers can also request the cancellation of the ongoing process to whom is providing the underlying long running operation.
+ *
+ * ```ts
+ * const poller = new MyPoller();
+ *
+ * // Polling just once:
+ * await poller.poll();
+ *
+ * // We can try to cancel the request here, by calling:
+ * //
+ * //     await poller.cancelOperation();
+ * //
+ *
+ * // Getting the final result:
+ * const result = await poller.pollUntilDone();
+ * ```
+ *
+ * The Poller is defined by two types, a type representing the state of the poller, which
+ * must include a basic set of properties from `PollOperationState<TResult>`,
+ * and a return type defined by `TResult`, which can be anything.
+ *
+ * The Poller class implements the `PollerLike` interface, which allows poller implementations to avoid having
+ * to export the Poller's class directly, and instead only export the already instantiated poller with the PollerLike type.
+ *
+ * ```ts
+ * class Client {
+ *   public async makePoller: PollerLike<MyOperationState, MyResult> {
+ *     const poller = new MyPoller({});
+ *     // It might be preferred to return the poller after the first request is made,
+ *     // so that some information can be obtained right away.
+ *     await poller.poll();
+ *     return poller;
+ *   }
+ * }
+ *
+ * const poller: PollerLike<MyOperationState, MyResult> = myClient.makePoller();
+ * ```
+ *
+ * A poller can be created through its constructor, then it can be polled until it's completed.
+ * At any point in time, the state of the poller can be obtained without delay through the getOperationState method.
+ * At any point in time, the intermediate forms of the result type can be requested without delay.
+ * Once the underlying operation is marked as completed, the poller will stop and the final value will be returned.
+ *
+ * ```ts
+ * const poller = myClient.makePoller();
+ * const state: MyOperationState = poller.getOperationState();
+ *
+ * // The intermediate result can be obtained at any time.
+ * const result: MyResult | undefined = poller.getResult();
+ *
+ * // The final result can only be obtained after the poller finishes.
+ * const result: MyResult = await poller.pollUntilDone();
+ * ```
+ *
+ */
+var Poller = /** @class */ (function () {
+    /**
+     * A poller needs to be initialized by passing in at least the basic properties of the PollOperation<TState, TResult>.
+     *
+     * When writing an implementation of a Poller, this implementation needs to deal with the initialization
+     * of any custom state beyond the basic definition of the poller. The basic poller assumes that the poller's
+     * operation has already been defined, at least its basic properties. The code below shows how to approach
+     * the definition of the constructor of a new custom poller.
+     *
+     * ```ts
+     * export class MyPoller extends Poller<MyOperationState, string> {
+     *   constructor({
+     *     // Anything you might need outside of the basics
+     *   }) {
+     *     let state: MyOperationState = {
+     *       privateProperty: private,
+     *       publicProperty: public,
+     *     };
+     *
+     *     const operation = {
+     *       state,
+     *       update,
+     *       cancel,
+     *       toString
+     *     }
+     *
+     *     // Sending the operation to the parent's constructor.
+     *     super(operation);
+     *
+     *     // You can assign more local properties here.
+     *   }
+     * }
+     * ```
+     *
+     * Inside of this constructor, a new promise is created. This will be used to
+     * tell the user when the poller finishes (see `pollUntilDone()`). The promise's
+     * resolve and reject methods are also used internally to control when to resolve
+     * or reject anyone waiting for the poller to finish.
+     *
+     * The constructor of a custom implementation of a poller is where any serialized version of
+     * a previous poller's operation should be deserialized into the operation sent to the
+     * base constructor. For example:
+     *
+     * ```ts
+     * export class MyPoller extends Poller<MyOperationState, string> {
+     *   constructor(
+     *     baseOperation: string | undefined
+     *   ) {
+     *     let state: MyOperationState = {};
+     *     if (baseOperation) {
+     *       state = {
+     *         ...JSON.parse(baseOperation).state,
+     *         ...state
+     *       };
+     *     }
+     *     const operation = {
+     *       state,
+     *       // ...
+     *     }
+     *     super(operation);
+     *   }
+     * }
+     * ```
+     *
+     * @param operation Must contain the basic properties of PollOperation<State, TResult>.
+     */
+    function Poller(operation) {
+        var _this = this;
+        this.stopped = true;
+        this.pollProgressCallbacks = [];
+        this.operation = operation;
+        this.promise = new Promise(function (resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
+        });
+        // This prevents the UnhandledPromiseRejectionWarning in node.js from being thrown.
+        // The above warning would get thrown if `poller.poll` is called, it returns an error,
+        // and pullUntilDone did not have a .catch or await try/catch on it's return value.
+        this.promise.catch(function () { });
+    }
+    /**
+     * @internal
+     * @ignore
+     * Starts a loop that will break only if the poller is done
+     * or if the poller is stopped.
+     */
+    Poller.prototype.startPolling = function () {
+        return tslib.__awaiter(this, void 0, void 0, function () {
+            return tslib.__generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (this.stopped) {
+                            this.stopped = false;
+                        }
+                        _a.label = 1;
+                    case 1:
+                        if (!(!this.isStopped() && !this.isDone())) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.poll()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, this.delay()];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * @internal
+     * @ignore
+     * pollOnce does one polling, by calling to the update method of the underlying
+     * poll operation to make any relevant change effective.
+     *
+     * It only optionally receives an object with an abortSignal property, from @azure/abort-controller's AbortSignalLike.
+     *
+     * @param options Optional properties passed to the operation's update method.
+     */
+    Poller.prototype.pollOnce = function (options) {
+        if (options === void 0) { options = {}; }
+        return tslib.__awaiter(this, void 0, void 0, function () {
+            var state, _a, e_1;
+            return tslib.__generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        state = this.operation.state;
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 4, , 5]);
+                        if (!!this.isDone()) return [3 /*break*/, 3];
+                        _a = this;
+                        return [4 /*yield*/, this.operation.update({
+                                abortSignal: options.abortSignal,
+                                fireProgress: this.fireProgress.bind(this)
+                            })];
+                    case 2:
+                        _a.operation = _b.sent();
+                        if (this.isDone() && this.resolve) {
+                            this.resolve(state.result);
+                        }
+                        _b.label = 3;
+                    case 3: return [3 /*break*/, 5];
+                    case 4:
+                        e_1 = _b.sent();
+                        state.error = e_1;
+                        if (this.reject) {
+                            this.reject(e_1);
+                        }
+                        throw e_1;
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * @internal
+     * @ignore
+     * fireProgress calls the functions passed in via onProgress the method of the poller.
+     *
+     * It loops over all of the callbacks received from onProgress, and executes them, sending them
+     * the current operation state.
+     *
+     * @param state The current operation state.
+     */
+    Poller.prototype.fireProgress = function (state) {
+        for (var _i = 0, _a = this.pollProgressCallbacks; _i < _a.length; _i++) {
+            var callback = _a[_i];
+            callback(state);
+        }
+    };
+    /**
+     * @internal
+     * @ignore
+     * Invokes the underlying operation's cancel method, and rejects the
+     * pollUntilDone promise.
+     */
+    Poller.prototype.cancelOnce = function (options) {
+        if (options === void 0) { options = {}; }
+        return tslib.__awaiter(this, void 0, void 0, function () {
+            var _a;
+            return tslib.__generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = this;
+                        return [4 /*yield*/, this.operation.cancel(options)];
+                    case 1:
+                        _a.operation = _b.sent();
+                        if (this.reject) {
+                            this.reject(new PollerCancelledError("Poller cancelled"));
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Returns a promise that will resolve once a single polling request finishes.
+     * It does this by calling the update method of the Poller's operation.
+     *
+     * It only optionally receives an object with an abortSignal property, from @azure/abort-controller's AbortSignalLike.
+     *
+     * @param options Optional properties passed to the operation's update method.
+     */
+    Poller.prototype.poll = function (options) {
+        var _this = this;
+        if (options === void 0) { options = {}; }
+        if (!this.pollOncePromise) {
+            this.pollOncePromise = this.pollOnce(options);
+            var clearPollOncePromise = function () {
+                _this.pollOncePromise = undefined;
+            };
+            this.pollOncePromise.then(clearPollOncePromise, clearPollOncePromise);
+        }
+        return this.pollOncePromise;
+    };
+    /**
+     * Returns a promise that will resolve once the underlying operation is completed.
+     */
+    Poller.prototype.pollUntilDone = function () {
+        return tslib.__awaiter(this, void 0, void 0, function () {
+            return tslib.__generator(this, function (_a) {
+                if (this.stopped) {
+                    this.startPolling().catch(this.reject);
+                }
+                return [2 /*return*/, this.promise];
+            });
+        });
+    };
+    /**
+     * Invokes the provided callback after each polling is completed,
+     * sending the current state of the poller's operation.
+     *
+     * It returns a method that can be used to stop receiving updates on the given callback function.
+     */
+    Poller.prototype.onProgress = function (callback) {
+        var _this = this;
+        this.pollProgressCallbacks.push(callback);
+        return function () {
+            _this.pollProgressCallbacks = _this.pollProgressCallbacks.filter(function (c) { return c !== callback; });
+        };
+    };
+    /**
+     * Returns true if the poller has finished polling.
+     */
+    Poller.prototype.isDone = function () {
+        var state = this.operation.state;
+        return Boolean(state.isCompleted || state.isCancelled || state.error);
+    };
+    /**
+     * Stops the poller from continuing to poll.
+     */
+    Poller.prototype.stopPolling = function () {
+        if (!this.stopped) {
+            this.stopped = true;
+            if (this.reject) {
+                this.reject(new PollerStoppedError("This poller is already stopped"));
+            }
+        }
+    };
+    /**
+     * Returns true if the poller is stopped.
+     */
+    Poller.prototype.isStopped = function () {
+        return this.stopped;
+    };
+    /**
+     * Attempts to cancel the underlying operation.
+     *
+     * It only optionally receives an object with an abortSignal property, from @azure/abort-controller's AbortSignalLike.
+     *
+     * If it's called again before it finishes, it will throw an error.
+     *
+     * @param options Optional properties passed to the operation's update method.
+     */
+    Poller.prototype.cancelOperation = function (options) {
+        if (options === void 0) { options = {}; }
+        if (!this.stopped) {
+            this.stopped = true;
+        }
+        if (!this.cancelPromise) {
+            this.cancelPromise = this.cancelOnce(options);
+        }
+        else if (options.abortSignal) {
+            throw new Error("A cancel request is currently pending");
+        }
+        return this.cancelPromise;
+    };
+    /**
+     * Returns the state of the operation.
+     *
+     * Even though TState will be the same type inside any of the methods of any extension of the Poller class,
+     * implementations of the pollers can customize what's shared with the public by writing their own
+     * version of the `getOperationState` method, and by defining two types, one representing the internal state of the poller
+     * and a public type representing a safe to share subset of the properties of the internal state.
+     * Their definition of getOperationState can then return their public type.
+     *
+     * Example:
+     *
+     * ```ts
+     * // Let's say we have our poller's operation state defined as:
+     * interface MyOperationState extends PollOperationState<ResultType> {
+     *   privateProperty?: string;
+     *   publicProperty?: string;
+     * }
+     *
+     * // To allow us to have a true separation of public and private state, we have to define another interface:
+     * interface PublicState extends PollOperationState<ResultType> {
+     *   publicProperty?: string;
+     * }
+     *
+     * // Then, we define our Poller as follows:
+     * export class MyPoller extends Poller<MyOperationState, ResultType> {
+     *   // ... More content is needed here ...
+     *
+     *   public getOperationState(): PublicState {
+     *     const state: PublicState = this.operation.state;
+     *     return {
+     *       // Properties from PollOperationState<TResult>
+     *       isStarted: state.isStarted,
+     *       isCompleted: state.isCompleted,
+     *       isCancelled: state.isCancelled,
+     *       error: state.error,
+     *       result: state.result,
+     *
+     *       // The only other property needed by PublicState.
+     *       publicProperty: state.publicProperty
+     *     }
+     *   }
+     * }
+     * ```
+     *
+     * You can see this in the tests of this repository, go to the file:
+     * `../test/utils/testPoller.ts`
+     * and look for the getOperationState implementation.
+     */
+    Poller.prototype.getOperationState = function () {
+        return this.operation.state;
+    };
+    /**
+     * Returns the result value of the operation,
+     * regardless of the state of the poller.
+     * It can return undefined or an incomplete form of the final TResult value
+     * depending on the implementation.
+     */
+    Poller.prototype.getResult = function () {
+        var state = this.operation.state;
+        return state.result;
+    };
+    /**
+     * Returns a serialized version of the poller's operation
+     * by invoking the operation's toString method.
+     */
+    Poller.prototype.toString = function () {
+        return this.operation.toString();
+    };
+    return Poller;
+}());
+
+exports.Poller = Poller;
+exports.PollerCancelledError = PollerCancelledError;
+exports.PollerStoppedError = PollerStoppedError;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
 /* 111 */,
 /* 112 */,
 /* 113 */,
@@ -3702,7 +4228,30 @@ exports.saveCache = saveCache;
 /* 116 */,
 /* 117 */,
 /* 118 */,
-/* 119 */,
+/* 119 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Observation.js.map
+
+/***/ }),
 /* 120 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -5083,7 +5632,41 @@ module.exports = minVersion
 
 
 /***/ }),
-/* 165 */,
+/* 165 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+__exportStar(__webpack_require__(514), exports);
+//# sourceMappingURL=index.js.map
+
+/***/ }),
 /* 166 */,
 /* 167 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -5094,8 +5677,54 @@ module.exports = gte
 
 
 /***/ }),
-/* 168 */,
-/* 169 */,
+/* 168 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=CorrelationContext.js.map
+
+/***/ }),
+/* 169 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=ObserverResult.js.map
+
+/***/ }),
 /* 170 */,
 /* 171 */,
 /* 172 */,
@@ -5359,7 +5988,30 @@ const Range = __webpack_require__(124)
 /***/ }),
 /* 175 */,
 /* 176 */,
-/* 177 */,
+/* 177 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=HttpTextPropagator.js.map
+
+/***/ }),
 /* 178 */,
 /* 179 */,
 /* 180 */,
@@ -5931,10 +6583,74 @@ module.exports = toComparators
 /***/ }),
 /* 220 */,
 /* 221 */,
-/* 222 */,
+/* 222 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOOP_TRACER_PROVIDER = exports.NoopTracerProvider = void 0;
+var NoopTracer_1 = __webpack_require__(980);
+/**
+ * An implementation of the {@link TracerProvider} which returns an impotent
+ * Tracer for all calls to `getTracer`.
+ *
+ * All operations are no-op.
+ */
+var NoopTracerProvider = /** @class */ (function () {
+    function NoopTracerProvider() {
+    }
+    NoopTracerProvider.prototype.getTracer = function (_name, _version) {
+        return NoopTracer_1.NOOP_TRACER;
+    };
+    return NoopTracerProvider;
+}());
+exports.NoopTracerProvider = NoopTracerProvider;
+exports.NOOP_TRACER_PROVIDER = new NoopTracerProvider();
+//# sourceMappingURL=NoopTracerProvider.js.map
+
+/***/ }),
 /* 223 */,
 /* 224 */,
-/* 225 */,
+/* 225 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Sampler.js.map
+
+/***/ }),
 /* 226 */
 /***/ (function(__unusedmodule, exports) {
 
@@ -6084,7 +6800,30 @@ exports.isTokenCredential = isTokenCredential;
 /* 234 */,
 /* 235 */,
 /* 236 */,
-/* 237 */,
+/* 237 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=BoundInstrument.js.map
+
+/***/ }),
 /* 238 */
 /***/ (function(__unusedmodule, exports) {
 
@@ -8022,12 +8761,81 @@ exports.setTracer = setTracer;
 
 /***/ }),
 /* 266 */,
-/* 267 */,
+/* 267 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NoopContextManager = void 0;
+var context_1 = __webpack_require__(966);
+var NoopContextManager = /** @class */ (function () {
+    function NoopContextManager() {
+    }
+    NoopContextManager.prototype.active = function () {
+        return context_1.Context.ROOT_CONTEXT;
+    };
+    NoopContextManager.prototype.with = function (context, fn) {
+        return fn();
+    };
+    NoopContextManager.prototype.bind = function (target, context) {
+        return target;
+    };
+    NoopContextManager.prototype.enable = function () {
+        return this;
+    };
+    NoopContextManager.prototype.disable = function () {
+        return this;
+    };
+    return NoopContextManager;
+}());
+exports.NoopContextManager = NoopContextManager;
+//# sourceMappingURL=NoopContextManager.js.map
+
+/***/ }),
 /* 268 */,
 /* 269 */,
 /* 270 */,
 /* 271 */,
-/* 272 */,
+/* 272 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=MeterProvider.js.map
+
+/***/ }),
 /* 273 */,
 /* 274 */,
 /* 275 */,
@@ -8110,7 +8918,96 @@ module.exports = compareLoose
 
 
 /***/ }),
-/* 284 */,
+/* 284 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ContextAPI = void 0;
+var context_base_1 = __webpack_require__(581);
+var global_utils_1 = __webpack_require__(591);
+var NOOP_CONTEXT_MANAGER = new context_base_1.NoopContextManager();
+/**
+ * Singleton object which represents the entry point to the OpenTelemetry Context API
+ */
+var ContextAPI = /** @class */ (function () {
+    /** Empty private constructor prevents end users from constructing a new instance of the API */
+    function ContextAPI() {
+    }
+    /** Get the singleton instance of the Context API */
+    ContextAPI.getInstance = function () {
+        if (!this._instance) {
+            this._instance = new ContextAPI();
+        }
+        return this._instance;
+    };
+    /**
+     * Set the current context manager. Returns the initialized context manager
+     */
+    ContextAPI.prototype.setGlobalContextManager = function (contextManager) {
+        if (global_utils_1._global[global_utils_1.GLOBAL_CONTEXT_MANAGER_API_KEY]) {
+            // global context manager has already been set
+            return this._getContextManager();
+        }
+        global_utils_1._global[global_utils_1.GLOBAL_CONTEXT_MANAGER_API_KEY] = global_utils_1.makeGetter(global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION, contextManager, NOOP_CONTEXT_MANAGER);
+        return contextManager;
+    };
+    /**
+     * Get the currently active context
+     */
+    ContextAPI.prototype.active = function () {
+        return this._getContextManager().active();
+    };
+    /**
+     * Execute a function with an active context
+     *
+     * @param context context to be active during function execution
+     * @param fn function to execute in a context
+     */
+    ContextAPI.prototype.with = function (context, fn) {
+        return this._getContextManager().with(context, fn);
+    };
+    /**
+     * Bind a context to a target function or event emitter
+     *
+     * @param target function or event emitter to bind
+     * @param context context to bind to the event emitter or function. Defaults to the currently active context
+     */
+    ContextAPI.prototype.bind = function (target, context) {
+        if (context === void 0) { context = this.active(); }
+        return this._getContextManager().bind(target, context);
+    };
+    ContextAPI.prototype._getContextManager = function () {
+        var _a, _b;
+        return ((_b = (_a = global_utils_1._global[global_utils_1.GLOBAL_CONTEXT_MANAGER_API_KEY]) === null || _a === void 0 ? void 0 : _a.call(global_utils_1._global, global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION)) !== null && _b !== void 0 ? _b : NOOP_CONTEXT_MANAGER);
+    };
+    /** Disable and remove the global context manager */
+    ContextAPI.prototype.disable = function () {
+        this._getContextManager().disable();
+        delete global_utils_1._global[global_utils_1.GLOBAL_CONTEXT_MANAGER_API_KEY];
+    };
+    return ContextAPI;
+}());
+exports.ContextAPI = ContextAPI;
+//# sourceMappingURL=context.js.map
+
+/***/ }),
 /* 285 */,
 /* 286 */,
 /* 287 */
@@ -9070,7 +9967,42 @@ var MatchKind;
 /* 328 */,
 /* 329 */,
 /* 330 */,
-/* 331 */,
+/* 331 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.defaultGetter = void 0;
+/**
+ * Default getter which just does a simple property access. Returns
+ * undefined if the key is not set.
+ *
+ * @param carrier
+ * @param key
+ */
+function defaultGetter(carrier, key) {
+    return carrier[key];
+}
+exports.defaultGetter = defaultGetter;
+//# sourceMappingURL=getter.js.map
+
+/***/ }),
 /* 332 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -9368,7 +10300,83 @@ exports.Store = Store;
 
 /***/ }),
 /* 339 */,
-/* 340 */,
+/* 340 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOOP_SPAN = exports.NoopSpan = exports.INVALID_SPAN_ID = exports.INVALID_TRACE_ID = void 0;
+var trace_flags_1 = __webpack_require__(917);
+exports.INVALID_TRACE_ID = '0';
+exports.INVALID_SPAN_ID = '0';
+var INVALID_SPAN_CONTEXT = {
+    traceId: exports.INVALID_TRACE_ID,
+    spanId: exports.INVALID_SPAN_ID,
+    traceFlags: trace_flags_1.TraceFlags.NONE,
+};
+/**
+ * The NoopSpan is the default {@link Span} that is used when no Span
+ * implementation is available. All operations are no-op including context
+ * propagation.
+ */
+var NoopSpan = /** @class */ (function () {
+    function NoopSpan(_spanContext) {
+        if (_spanContext === void 0) { _spanContext = INVALID_SPAN_CONTEXT; }
+        this._spanContext = _spanContext;
+    }
+    // Returns a SpanContext.
+    NoopSpan.prototype.context = function () {
+        return this._spanContext;
+    };
+    // By default does nothing
+    NoopSpan.prototype.setAttribute = function (key, value) {
+        return this;
+    };
+    // By default does nothing
+    NoopSpan.prototype.setAttributes = function (attributes) {
+        return this;
+    };
+    // By default does nothing
+    NoopSpan.prototype.addEvent = function (name, attributes) {
+        return this;
+    };
+    // By default does nothing
+    NoopSpan.prototype.setStatus = function (status) {
+        return this;
+    };
+    // By default does nothing
+    NoopSpan.prototype.updateName = function (name) {
+        return this;
+    };
+    // By default does nothing
+    NoopSpan.prototype.end = function (endTime) { };
+    // isRecording always returns false for noopSpan.
+    NoopSpan.prototype.isRecording = function () {
+        return false;
+    };
+    return NoopSpan;
+}());
+exports.NoopSpan = NoopSpan;
+exports.NOOP_SPAN = new NoopSpan();
+//# sourceMappingURL=NoopSpan.js.map
+
+/***/ }),
 /* 341 */,
 /* 342 */,
 /* 343 */
@@ -9546,12 +10554,43 @@ module.exports = require("assert");
 /* 359 */,
 /* 360 */,
 /* 361 */,
-/* 362 */,
+/* 362 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Logger.js.map
+
+/***/ }),
 /* 363 */,
 /* 364 */,
 /* 365 */,
 /* 366 */,
-/* 367 */,
+/* 367 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const compare = __webpack_require__(874)
+const lt = (a, b, loose) => compare(a, b, loose) < 0
+module.exports = lt
+
+
+/***/ }),
 /* 368 */,
 /* 369 */,
 /* 370 */,
@@ -9577,7 +10616,7 @@ var util = __webpack_require__(669);
 var crypto = __webpack_require__(417);
 var events = __webpack_require__(614);
 var coreTracing = __webpack_require__(263);
-var coreLro = __webpack_require__(889);
+var coreLro = __webpack_require__(110);
 __webpack_require__(242);
 
 /*
@@ -29271,7 +30310,58 @@ exports.newPipeline = newPipeline;
 
 
 /***/ }),
-/* 374 */,
+/* 374 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SpanKind = void 0;
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var SpanKind;
+(function (SpanKind) {
+    /** Default value. Indicates that the span is used internally. */
+    SpanKind[SpanKind["INTERNAL"] = 0] = "INTERNAL";
+    /**
+     * Indicates that the span covers server-side handling of an RPC or other
+     * remote request.
+     */
+    SpanKind[SpanKind["SERVER"] = 1] = "SERVER";
+    /**
+     * Indicates that the span covers the client-side wrapper around an RPC or
+     * other remote request.
+     */
+    SpanKind[SpanKind["CLIENT"] = 2] = "CLIENT";
+    /**
+     * Indicates that the span describes producer sending a message to a
+     * broker. Unlike client and server, there is no direct critical path latency
+     * relationship between producer and consumer spans.
+     */
+    SpanKind[SpanKind["PRODUCER"] = 3] = "PRODUCER";
+    /**
+     * Indicates that the span describes consumer receiving a message from a
+     * broker. Unlike client and server, there is no direct critical path latency
+     * relationship between producer and consumer spans.
+     */
+    SpanKind[SpanKind["CONSUMER"] = 4] = "CONSUMER";
+})(SpanKind = exports.SpanKind || (exports.SpanKind = {}));
+//# sourceMappingURL=span_kind.js.map
+
+/***/ }),
 /* 375 */,
 /* 376 */,
 /* 377 */,
@@ -29768,7 +30858,30 @@ exports.endpoint = endpoint;
 /* 388 */,
 /* 389 */,
 /* 390 */,
-/* 391 */,
+/* 391 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Event.js.map
+
+/***/ }),
 /* 392 */,
 /* 393 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -31643,7 +32756,34 @@ module.exports = __webpack_require__(141);
 module.exports = require("crypto");
 
 /***/ }),
-/* 418 */,
+/* 418 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports._globalThis = void 0;
+/** only globals that common to node and browsers are allowed */
+// eslint-disable-next-line node/no-unsupported-features/es-builtins
+exports._globalThis = typeof globalThis === 'object' ? globalThis : global;
+//# sourceMappingURL=globalThis.js.map
+
+/***/ }),
 /* 419 */,
 /* 420 */,
 /* 421 */,
@@ -32640,6 +33780,7 @@ function createTar(archiveFolder, sourceDirectories, compressionMethod) {
             }
         }
         const args = [
+            '--posix',
             ...getCompressionProgram(),
             '-cf',
             cacheFileName.replace(new RegExp(`\\${path.sep}`, 'g'), '/'),
@@ -32660,7 +33801,41 @@ exports.createTar = createTar;
 /* 436 */,
 /* 437 */,
 /* 438 */,
-/* 439 */,
+/* 439 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.defaultSetter = void 0;
+/**
+ * Default setter which sets value via direct property access
+ *
+ * @param carrier
+ * @param key
+ */
+function defaultSetter(carrier, key, value) {
+    carrier[key] = value;
+}
+exports.defaultSetter = defaultSetter;
+//# sourceMappingURL=setter.js.map
+
+/***/ }),
 /* 440 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -32733,7 +33908,30 @@ module.exports = lte
 
 
 /***/ }),
-/* 445 */,
+/* 445 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=link_context.js.map
+
+/***/ }),
 /* 446 */,
 /* 447 */,
 /* 448 */
@@ -34673,7 +35871,30 @@ exports.FetchError = FetchError;
 /***/ }),
 /* 455 */,
 /* 456 */,
-/* 457 */,
+/* 457 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=TimedEvent.js.map
+
+/***/ }),
 /* 458 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -34903,7 +36124,7 @@ const {ANY} = Comparator
 const Range = __webpack_require__(124)
 const satisfies = __webpack_require__(310)
 const gt = __webpack_require__(486)
-const lt = __webpack_require__(586)
+const lt = __webpack_require__(367)
 const lte = __webpack_require__(444)
 const gte = __webpack_require__(167)
 
@@ -35068,7 +36289,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getOctokit = exports.context = void 0;
 const Context = __importStar(__webpack_require__(262));
-const utils_1 = __webpack_require__(521);
+const utils_1 = __webpack_require__(902);
 exports.context = new Context.Context();
 /**
  * Returns a hydrated octokit ready to use for GitHub Actions
@@ -35472,7 +36693,47 @@ module.exports = validRange
 /* 481 */,
 /* 482 */,
 /* 483 */,
-/* 484 */,
+/* 484 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOOP_HTTP_TEXT_PROPAGATOR = exports.NoopHttpTextPropagator = void 0;
+/**
+ * No-op implementations of {@link HttpTextPropagator}.
+ */
+var NoopHttpTextPropagator = /** @class */ (function () {
+    function NoopHttpTextPropagator() {
+    }
+    /** Noop inject function does nothing */
+    NoopHttpTextPropagator.prototype.inject = function (context, carrier, setter) { };
+    /** Noop extract function does nothing and returns the input context */
+    NoopHttpTextPropagator.prototype.extract = function (context, carrier, getter) {
+        return context;
+    };
+    return NoopHttpTextPropagator;
+}());
+exports.NoopHttpTextPropagator = NoopHttpTextPropagator;
+exports.NOOP_HTTP_TEXT_PROPAGATOR = new NoopHttpTextPropagator();
+//# sourceMappingURL=NoopHttpTextPropagator.js.map
+
+/***/ }),
 /* 485 */,
 /* 486 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -35623,7 +36884,31 @@ exports.ContextAPI = ContextAPI;
 //# sourceMappingURL=context.js.map
 
 /***/ }),
-/* 493 */,
+/* 493 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EntryTtl = void 0;
+/**
+ * EntryTtl is an integer that represents number of hops an entry can propagate.
+ *
+ * For now, ONLY special values (0 and -1) are supported.
+ */
+var EntryTtl;
+(function (EntryTtl) {
+    /**
+     * NO_PROPAGATION is considered to have local context and is used within the
+     * process it created.
+     */
+    EntryTtl[EntryTtl["NO_PROPAGATION"] = 0] = "NO_PROPAGATION";
+    /** UNLIMITED_PROPAGATION can propagate unlimited hops. */
+    EntryTtl[EntryTtl["UNLIMITED_PROPAGATION"] = -1] = "UNLIMITED_PROPAGATION";
+})(EntryTtl = exports.EntryTtl || (exports.EntryTtl = {}));
+//# sourceMappingURL=EntryValue.js.map
+
+/***/ }),
 /* 494 */,
 /* 495 */,
 /* 496 */,
@@ -35824,7 +37109,41 @@ exports.Deprecation = Deprecation;
 
 
 /***/ }),
-/* 514 */,
+/* 514 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+__exportStar(__webpack_require__(418), exports);
+//# sourceMappingURL=index.js.map
+
+/***/ }),
 /* 515 */
 /***/ (function(module) {
 
@@ -35869,63 +37188,27 @@ exports.Deprecation = Deprecation;
 /* 519 */,
 /* 520 */,
 /* 521 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOctokitOptions = exports.GitHub = exports.context = void 0;
-const Context = __importStar(__webpack_require__(262));
-const Utils = __importStar(__webpack_require__(127));
-// octokit + plugins
-const core_1 = __webpack_require__(448);
-const plugin_rest_endpoint_methods_1 = __webpack_require__(842);
-const plugin_paginate_rest_1 = __webpack_require__(299);
-exports.context = new Context.Context();
-const baseUrl = Utils.getApiBaseUrl();
-const defaults = {
-    baseUrl,
-    request: {
-        agent: Utils.getProxyAgent(baseUrl)
-    }
-};
-exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
-/**
- * Convience function to correctly format Octokit Options to pass into the constructor.
+/*
+ * Copyright The OpenTelemetry Authors
  *
- * @param     token    the repo PAT or GITHUB_TOKEN
- * @param     options  other options to set
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-function getOctokitOptions(token, options) {
-    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
-    // Auth
-    const auth = Utils.getAuthString(token, opts);
-    if (auth) {
-        opts.auth = auth;
-    }
-    return opts;
-}
-exports.getOctokitOptions = getOctokitOptions;
-//# sourceMappingURL=utils.js.map
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=span.js.map
 
 /***/ }),
 /* 522 */,
@@ -39626,8 +40909,36 @@ exports.getPublicSuffix = getPublicSuffix;
 
 
 /***/ }),
-/* 563 */,
-/* 564 */,
+/* 563 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=attributes.js.map
+
+/***/ }),
+/* 564 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const SemVer = __webpack_require__(206)
+
+const inc = (version, release, options, identifier) => {
+  if (typeof (options) === 'string') {
+    identifier = options
+    options = undefined
+  }
+
+  try {
+    return new SemVer(version, options).inc(release, identifier).version
+  } catch (er) {
+    return null
+  }
+}
+module.exports = inc
+
+
+/***/ }),
 /* 565 */,
 /* 566 */
 /***/ (function(module) {
@@ -39678,7 +40989,43 @@ function clean(key)
 /* 578 */,
 /* 579 */,
 /* 580 */,
-/* 581 */,
+/* 581 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+__exportStar(__webpack_require__(47), exports);
+__exportStar(__webpack_require__(966), exports);
+__exportStar(__webpack_require__(267), exports);
+//# sourceMappingURL=index.js.map
+
+/***/ }),
 /* 582 */
 /***/ (function(module) {
 
@@ -39856,19 +41203,134 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /***/ }),
 /* 586 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-const compare = __webpack_require__(874)
-const lt = (a, b, loose) => compare(a, b, loose) < 0
-module.exports = lt
+"use strict";
 
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TraceAPI = void 0;
+var NoopTracerProvider_1 = __webpack_require__(222);
+var global_utils_1 = __webpack_require__(591);
+/**
+ * Singleton object which represents the entry point to the OpenTelemetry Tracing API
+ */
+var TraceAPI = /** @class */ (function () {
+    /** Empty private constructor prevents end users from constructing a new instance of the API */
+    function TraceAPI() {
+    }
+    /** Get the singleton instance of the Trace API */
+    TraceAPI.getInstance = function () {
+        if (!this._instance) {
+            this._instance = new TraceAPI();
+        }
+        return this._instance;
+    };
+    /**
+     * Set the current global tracer. Returns the initialized global tracer provider
+     */
+    TraceAPI.prototype.setGlobalTracerProvider = function (provider) {
+        if (global_utils_1._global[global_utils_1.GLOBAL_TRACE_API_KEY]) {
+            // global tracer provider has already been set
+            return this.getTracerProvider();
+        }
+        global_utils_1._global[global_utils_1.GLOBAL_TRACE_API_KEY] = global_utils_1.makeGetter(global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION, provider, NoopTracerProvider_1.NOOP_TRACER_PROVIDER);
+        return this.getTracerProvider();
+    };
+    /**
+     * Returns the global tracer provider.
+     */
+    TraceAPI.prototype.getTracerProvider = function () {
+        var _a, _b;
+        return ((_b = (_a = global_utils_1._global[global_utils_1.GLOBAL_TRACE_API_KEY]) === null || _a === void 0 ? void 0 : _a.call(global_utils_1._global, global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION)) !== null && _b !== void 0 ? _b : NoopTracerProvider_1.NOOP_TRACER_PROVIDER);
+    };
+    /**
+     * Returns a tracer from the global tracer provider.
+     */
+    TraceAPI.prototype.getTracer = function (name, version) {
+        return this.getTracerProvider().getTracer(name, version);
+    };
+    /** Remove the global tracer provider */
+    TraceAPI.prototype.disable = function () {
+        delete global_utils_1._global[global_utils_1.GLOBAL_TRACE_API_KEY];
+    };
+    return TraceAPI;
+}());
+exports.TraceAPI = TraceAPI;
+//# sourceMappingURL=trace.js.map
 
 /***/ }),
 /* 587 */,
 /* 588 */,
 /* 589 */,
 /* 590 */,
-/* 591 */,
+/* 591 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.API_BACKWARDS_COMPATIBILITY_VERSION = exports.makeGetter = exports._global = exports.GLOBAL_TRACE_API_KEY = exports.GLOBAL_PROPAGATION_API_KEY = exports.GLOBAL_METRICS_API_KEY = exports.GLOBAL_CONTEXT_MANAGER_API_KEY = void 0;
+var platform_1 = __webpack_require__(165);
+exports.GLOBAL_CONTEXT_MANAGER_API_KEY = Symbol.for('io.opentelemetry.js.api.context');
+exports.GLOBAL_METRICS_API_KEY = Symbol.for('io.opentelemetry.js.api.metrics');
+exports.GLOBAL_PROPAGATION_API_KEY = Symbol.for('io.opentelemetry.js.api.propagation');
+exports.GLOBAL_TRACE_API_KEY = Symbol.for('io.opentelemetry.js.api.trace');
+exports._global = platform_1._globalThis;
+/**
+ * Make a function which accepts a version integer and returns the instance of an API if the version
+ * is compatible, or a fallback version (usually NOOP) if it is not.
+ *
+ * @param requiredVersion Backwards compatibility version which is required to return the instance
+ * @param instance Instance which should be returned if the required version is compatible
+ * @param fallback Fallback instance, usually NOOP, which will be returned if the required version is not compatible
+ */
+function makeGetter(requiredVersion, instance, fallback) {
+    return function (version) {
+        return version === requiredVersion ? instance : fallback;
+    };
+}
+exports.makeGetter = makeGetter;
+/**
+ * A number which should be incremented each time a backwards incompatible
+ * change is made to the API. This number is used when an API package
+ * attempts to access the global API to ensure it is getting a compatible
+ * version. If the global API is not compatible with the API package
+ * attempting to get it, a NOOP API implementation will be returned.
+ */
+exports.API_BACKWARDS_COMPATIBILITY_VERSION = 0;
+//# sourceMappingURL=global-utils.js.map
+
+/***/ }),
 /* 592 */,
 /* 593 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -40342,7 +41804,30 @@ exports.default = _default;
 
 /***/ }),
 /* 617 */,
-/* 618 */,
+/* 618 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=tracer.js.map
+
+/***/ }),
 /* 619 */,
 /* 620 */,
 /* 621 */
@@ -42763,7 +44248,30 @@ function isUnixExecutable(stats) {
 //# sourceMappingURL=io-util.js.map
 
 /***/ }),
-/* 673 */,
+/* 673 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Plugin.js.map
+
+/***/ }),
 /* 674 */,
 /* 675 */,
 /* 676 */
@@ -43161,7 +44669,15 @@ module.exports = bytesToUuid;
 
 /***/ }),
 /* 725 */,
-/* 726 */,
+/* 726 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=trace_state.js.map
+
+/***/ }),
 /* 727 */,
 /* 728 */
 /***/ (function(__unusedmodule, exports) {
@@ -43181,7 +44697,78 @@ exports.SearchState = SearchState;
 /***/ }),
 /* 729 */,
 /* 730 */,
-/* 731 */,
+/* 731 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MetricsAPI = void 0;
+var NoopMeterProvider_1 = __webpack_require__(984);
+var global_utils_1 = __webpack_require__(591);
+/**
+ * Singleton object which represents the entry point to the OpenTelemetry Metrics API
+ */
+var MetricsAPI = /** @class */ (function () {
+    /** Empty private constructor prevents end users from constructing a new instance of the API */
+    function MetricsAPI() {
+    }
+    /** Get the singleton instance of the Metrics API */
+    MetricsAPI.getInstance = function () {
+        if (!this._instance) {
+            this._instance = new MetricsAPI();
+        }
+        return this._instance;
+    };
+    /**
+     * Set the current global meter. Returns the initialized global meter provider.
+     */
+    MetricsAPI.prototype.setGlobalMeterProvider = function (provider) {
+        if (global_utils_1._global[global_utils_1.GLOBAL_METRICS_API_KEY]) {
+            // global meter provider has already been set
+            return this.getMeterProvider();
+        }
+        global_utils_1._global[global_utils_1.GLOBAL_METRICS_API_KEY] = global_utils_1.makeGetter(global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION, provider, NoopMeterProvider_1.NOOP_METER_PROVIDER);
+        return provider;
+    };
+    /**
+     * Returns the global meter provider.
+     */
+    MetricsAPI.prototype.getMeterProvider = function () {
+        var _a, _b;
+        return ((_b = (_a = global_utils_1._global[global_utils_1.GLOBAL_METRICS_API_KEY]) === null || _a === void 0 ? void 0 : _a.call(global_utils_1._global, global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION)) !== null && _b !== void 0 ? _b : NoopMeterProvider_1.NOOP_METER_PROVIDER);
+    };
+    /**
+     * Returns a meter from the global meter provider.
+     */
+    MetricsAPI.prototype.getMeter = function (name, version) {
+        return this.getMeterProvider().getMeter(name, version);
+    };
+    /** Remove the global meter provider */
+    MetricsAPI.prototype.disable = function () {
+        delete global_utils_1._global[global_utils_1.GLOBAL_METRICS_API_KEY];
+    };
+    return MetricsAPI;
+}());
+exports.MetricsAPI = MetricsAPI;
+//# sourceMappingURL=metrics.js.map
+
+/***/ }),
 /* 732 */,
 /* 733 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -43480,7 +45067,30 @@ module.exports = minSatisfying
 
 
 /***/ }),
-/* 741 */,
+/* 741 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=span_context.js.map
+
+/***/ }),
 /* 742 */,
 /* 743 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -43954,7 +45564,7 @@ const eq = __webpack_require__(698)
 const neq = __webpack_require__(873)
 const gt = __webpack_require__(486)
 const gte = __webpack_require__(167)
-const lt = __webpack_require__(586)
+const lt = __webpack_require__(367)
 const lte = __webpack_require__(444)
 
 const cmp = (a, op, b, loose) => {
@@ -45981,7 +47591,97 @@ exports.createTokenAuth = createTokenAuth;
 
 /***/ }),
 /* 814 */,
-/* 815 */,
+/* 815 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PropagationAPI = void 0;
+var getter_1 = __webpack_require__(331);
+var NoopHttpTextPropagator_1 = __webpack_require__(484);
+var setter_1 = __webpack_require__(439);
+var context_1 = __webpack_require__(284);
+var global_utils_1 = __webpack_require__(591);
+var contextApi = context_1.ContextAPI.getInstance();
+/**
+ * Singleton object which represents the entry point to the OpenTelemetry Propagation API
+ */
+var PropagationAPI = /** @class */ (function () {
+    /** Empty private constructor prevents end users from constructing a new instance of the API */
+    function PropagationAPI() {
+    }
+    /** Get the singleton instance of the Propagator API */
+    PropagationAPI.getInstance = function () {
+        if (!this._instance) {
+            this._instance = new PropagationAPI();
+        }
+        return this._instance;
+    };
+    /**
+     * Set the current propagator. Returns the initialized propagator
+     */
+    PropagationAPI.prototype.setGlobalPropagator = function (propagator) {
+        if (global_utils_1._global[global_utils_1.GLOBAL_PROPAGATION_API_KEY]) {
+            // global propagator has already been set
+            return this._getGlobalPropagator();
+        }
+        global_utils_1._global[global_utils_1.GLOBAL_PROPAGATION_API_KEY] = global_utils_1.makeGetter(global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION, propagator, NoopHttpTextPropagator_1.NOOP_HTTP_TEXT_PROPAGATOR);
+        return propagator;
+    };
+    /**
+     * Inject context into a carrier to be propagated inter-process
+     *
+     * @param carrier carrier to inject context into
+     * @param setter Function used to set values on the carrier
+     * @param context Context carrying tracing data to inject. Defaults to the currently active context.
+     */
+    PropagationAPI.prototype.inject = function (carrier, setter, context) {
+        if (setter === void 0) { setter = setter_1.defaultSetter; }
+        if (context === void 0) { context = contextApi.active(); }
+        return this._getGlobalPropagator().inject(context, carrier, setter);
+    };
+    /**
+     * Extract context from a carrier
+     *
+     * @param carrier Carrier to extract context from
+     * @param getter Function used to extract keys from a carrier
+     * @param context Context which the newly created context will inherit from. Defaults to the currently active context.
+     */
+    PropagationAPI.prototype.extract = function (carrier, getter, context) {
+        if (getter === void 0) { getter = getter_1.defaultGetter; }
+        if (context === void 0) { context = contextApi.active(); }
+        return this._getGlobalPropagator().extract(context, carrier, getter);
+    };
+    /** Remove the global propagator */
+    PropagationAPI.prototype.disable = function () {
+        delete global_utils_1._global[global_utils_1.GLOBAL_PROPAGATION_API_KEY];
+    };
+    PropagationAPI.prototype._getGlobalPropagator = function () {
+        var _a, _b;
+        return ((_b = (_a = global_utils_1._global[global_utils_1.GLOBAL_PROPAGATION_API_KEY]) === null || _a === void 0 ? void 0 : _a.call(global_utils_1._global, global_utils_1.API_BACKWARDS_COMPATIBILITY_VERSION)) !== null && _b !== void 0 ? _b : NoopHttpTextPropagator_1.NOOP_HTTP_TEXT_PROPAGATOR);
+    };
+    return PropagationAPI;
+}());
+exports.PropagationAPI = PropagationAPI;
+//# sourceMappingURL=propagation.js.map
+
+/***/ }),
 /* 816 */,
 /* 817 */,
 /* 818 */,
@@ -46055,7 +47755,98 @@ module.exports = v4;
 
 
 /***/ }),
-/* 827 */,
+/* 827 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.propagation = exports.metrics = exports.trace = exports.context = void 0;
+__exportStar(__webpack_require__(362), exports);
+__exportStar(__webpack_require__(109), exports);
+__exportStar(__webpack_require__(331), exports);
+__exportStar(__webpack_require__(177), exports);
+__exportStar(__webpack_require__(484), exports);
+__exportStar(__webpack_require__(439), exports);
+__exportStar(__webpack_require__(168), exports);
+__exportStar(__webpack_require__(493), exports);
+__exportStar(__webpack_require__(890), exports);
+__exportStar(__webpack_require__(237), exports);
+__exportStar(__webpack_require__(949), exports);
+__exportStar(__webpack_require__(272), exports);
+__exportStar(__webpack_require__(993), exports);
+__exportStar(__webpack_require__(982), exports);
+__exportStar(__webpack_require__(984), exports);
+__exportStar(__webpack_require__(119), exports);
+__exportStar(__webpack_require__(169), exports);
+__exportStar(__webpack_require__(563), exports);
+__exportStar(__webpack_require__(391), exports);
+__exportStar(__webpack_require__(673), exports);
+__exportStar(__webpack_require__(445), exports);
+__exportStar(__webpack_require__(105), exports);
+__exportStar(__webpack_require__(340), exports);
+__exportStar(__webpack_require__(980), exports);
+__exportStar(__webpack_require__(222), exports);
+__exportStar(__webpack_require__(225), exports);
+__exportStar(__webpack_require__(868), exports);
+__exportStar(__webpack_require__(741), exports);
+__exportStar(__webpack_require__(374), exports);
+__exportStar(__webpack_require__(521), exports);
+__exportStar(__webpack_require__(871), exports);
+__exportStar(__webpack_require__(883), exports);
+__exportStar(__webpack_require__(457), exports);
+__exportStar(__webpack_require__(917), exports);
+__exportStar(__webpack_require__(726), exports);
+__exportStar(__webpack_require__(889), exports);
+__exportStar(__webpack_require__(618), exports);
+var context_base_1 = __webpack_require__(581);
+Object.defineProperty(exports, "Context", { enumerable: true, get: function () { return context_base_1.Context; } });
+var context_1 = __webpack_require__(284);
+/** Entrypoint for context API */
+exports.context = context_1.ContextAPI.getInstance();
+var trace_1 = __webpack_require__(586);
+/** Entrypoint for trace API */
+exports.trace = trace_1.TraceAPI.getInstance();
+var metrics_1 = __webpack_require__(731);
+/** Entrypoint for metrics API */
+exports.metrics = metrics_1.MetricsAPI.getInstance();
+var propagation_1 = __webpack_require__(815);
+/** Entrypoint for propagation API */
+exports.propagation = propagation_1.PropagationAPI.getInstance();
+exports.default = {
+    trace: exports.trace,
+    metrics: exports.metrics,
+    context: exports.context,
+    propagation: exports.propagation,
+};
+//# sourceMappingURL=index.js.map
+
+/***/ }),
 /* 828 */,
 /* 829 */,
 /* 830 */
@@ -47796,10 +49587,79 @@ function removeHook (state, name, method) {
 
 /***/ }),
 /* 867 */,
-/* 868 */,
+/* 868 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SamplingDecision = void 0;
+/**
+ * A sampling decision that determines how a {@link Span} will be recorded
+ * and collected.
+ */
+var SamplingDecision;
+(function (SamplingDecision) {
+    /**
+     * `Span.isRecording() === false`, span will not be recorded and all events
+     * and attributes will be dropped.
+     */
+    SamplingDecision[SamplingDecision["NOT_RECORD"] = 0] = "NOT_RECORD";
+    /**
+     * `Span.isRecording() === true`, but `Sampled` flag in {@link TraceFlags}
+     * MUST NOT be set.
+     */
+    SamplingDecision[SamplingDecision["RECORD"] = 1] = "RECORD";
+    /**
+     * `Span.isRecording() === true` AND `Sampled` flag in {@link TraceFlags}
+     * MUST be set.
+     */
+    SamplingDecision[SamplingDecision["RECORD_AND_SAMPLED"] = 2] = "RECORD_AND_SAMPLED";
+})(SamplingDecision = exports.SamplingDecision || (exports.SamplingDecision = {}));
+//# sourceMappingURL=SamplingResult.js.map
+
+/***/ }),
 /* 869 */,
 /* 870 */,
-/* 871 */,
+/* 871 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=SpanOptions.js.map
+
+/***/ }),
 /* 872 */,
 /* 873 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -47898,7 +49758,7 @@ module.exports = {
   parse: __webpack_require__(830),
   valid: __webpack_require__(714),
   clean: __webpack_require__(503),
-  inc: __webpack_require__(949),
+  inc: __webpack_require__(564),
   diff: __webpack_require__(822),
   major: __webpack_require__(122),
   minor: __webpack_require__(803),
@@ -47911,7 +49771,7 @@ module.exports = {
   sort: __webpack_require__(120),
   rsort: __webpack_require__(593),
   gt: __webpack_require__(486),
-  lt: __webpack_require__(586),
+  lt: __webpack_require__(367),
   eq: __webpack_require__(698),
   neq: __webpack_require__(873),
   gte: __webpack_require__(167),
@@ -49592,7 +51452,153 @@ function coerce (version, options) {
 
 
 /***/ }),
-/* 883 */,
+/* 883 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CanonicalCode = void 0;
+/**
+ * An enumeration of canonical status codes.
+ */
+var CanonicalCode;
+(function (CanonicalCode) {
+    /**
+     * Not an error; returned on success
+     */
+    CanonicalCode[CanonicalCode["OK"] = 0] = "OK";
+    /**
+     * The operation was cancelled (typically by the caller).
+     */
+    CanonicalCode[CanonicalCode["CANCELLED"] = 1] = "CANCELLED";
+    /**
+     * Unknown error.  An example of where this error may be returned is
+     * if a status value received from another address space belongs to
+     * an error-space that is not known in this address space.  Also
+     * errors raised by APIs that do not return enough error information
+     * may be converted to this error.
+     */
+    CanonicalCode[CanonicalCode["UNKNOWN"] = 2] = "UNKNOWN";
+    /**
+     * Client specified an invalid argument.  Note that this differs
+     * from FAILED_PRECONDITION.  INVALID_ARGUMENT indicates arguments
+     * that are problematic regardless of the state of the system
+     * (e.g., a malformed file name).
+     */
+    CanonicalCode[CanonicalCode["INVALID_ARGUMENT"] = 3] = "INVALID_ARGUMENT";
+    /**
+     * Deadline expired before operation could complete.  For operations
+     * that change the state of the system, this error may be returned
+     * even if the operation has completed successfully.  For example, a
+     * successful response from a server could have been delayed long
+     * enough for the deadline to expire.
+     */
+    CanonicalCode[CanonicalCode["DEADLINE_EXCEEDED"] = 4] = "DEADLINE_EXCEEDED";
+    /**
+     * Some requested entity (e.g., file or directory) was not found.
+     */
+    CanonicalCode[CanonicalCode["NOT_FOUND"] = 5] = "NOT_FOUND";
+    /**
+     * Some entity that we attempted to create (e.g., file or directory)
+     * already exists.
+     */
+    CanonicalCode[CanonicalCode["ALREADY_EXISTS"] = 6] = "ALREADY_EXISTS";
+    /**
+     * The caller does not have permission to execute the specified
+     * operation.  PERMISSION_DENIED must not be used for rejections
+     * caused by exhausting some resource (use RESOURCE_EXHAUSTED
+     * instead for those errors).  PERMISSION_DENIED must not be
+     * used if the caller can not be identified (use UNAUTHENTICATED
+     * instead for those errors).
+     */
+    CanonicalCode[CanonicalCode["PERMISSION_DENIED"] = 7] = "PERMISSION_DENIED";
+    /**
+     * Some resource has been exhausted, perhaps a per-user quota, or
+     * perhaps the entire file system is out of space.
+     */
+    CanonicalCode[CanonicalCode["RESOURCE_EXHAUSTED"] = 8] = "RESOURCE_EXHAUSTED";
+    /**
+     * Operation was rejected because the system is not in a state
+     * required for the operation's execution.  For example, directory
+     * to be deleted may be non-empty, an rmdir operation is applied to
+     * a non-directory, etc.
+     *
+     * A litmus test that may help a service implementor in deciding
+     * between FAILED_PRECONDITION, ABORTED, and UNAVAILABLE:
+     *
+     *  - Use UNAVAILABLE if the client can retry just the failing call.
+     *  - Use ABORTED if the client should retry at a higher-level
+     *    (e.g., restarting a read-modify-write sequence).
+     *  - Use FAILED_PRECONDITION if the client should not retry until
+     *    the system state has been explicitly fixed.  E.g., if an "rmdir"
+     *    fails because the directory is non-empty, FAILED_PRECONDITION
+     *    should be returned since the client should not retry unless
+     *    they have first fixed up the directory by deleting files from it.
+     *  - Use FAILED_PRECONDITION if the client performs conditional
+     *    REST Get/Update/Delete on a resource and the resource on the
+     *    server does not match the condition. E.g., conflicting
+     *    read-modify-write on the same resource.
+     */
+    CanonicalCode[CanonicalCode["FAILED_PRECONDITION"] = 9] = "FAILED_PRECONDITION";
+    /**
+     * The operation was aborted, typically due to a concurrency issue
+     * like sequencer check failures, transaction aborts, etc.
+     *
+     * See litmus test above for deciding between FAILED_PRECONDITION,
+     * ABORTED, and UNAVAILABLE.
+     */
+    CanonicalCode[CanonicalCode["ABORTED"] = 10] = "ABORTED";
+    /**
+     * Operation was attempted past the valid range.  E.g., seeking or
+     * reading past end of file.
+     *
+     * Unlike INVALID_ARGUMENT, this error indicates a problem that may
+     * be fixed if the system state changes. For example, a 32-bit file
+     * system will generate INVALID_ARGUMENT if asked to read at an
+     * offset that is not in the range [0,2^32-1], but it will generate
+     * OUT_OF_RANGE if asked to read from an offset past the current
+     * file size.
+     *
+     * There is a fair bit of overlap between FAILED_PRECONDITION and
+     * OUT_OF_RANGE.  We recommend using OUT_OF_RANGE (the more specific
+     * error) when it applies so that callers who are iterating through
+     * a space can easily look for an OUT_OF_RANGE error to detect when
+     * they are done.
+     */
+    CanonicalCode[CanonicalCode["OUT_OF_RANGE"] = 11] = "OUT_OF_RANGE";
+    /**
+     * Operation is not implemented or not supported/enabled in this service.
+     */
+    CanonicalCode[CanonicalCode["UNIMPLEMENTED"] = 12] = "UNIMPLEMENTED";
+    /**
+     * Internal errors.  Means some invariants expected by underlying
+     * system has been broken.  If you see one of these errors,
+     * something is very broken.
+     */
+    CanonicalCode[CanonicalCode["INTERNAL"] = 13] = "INTERNAL";
+    /**
+     * The service is currently unavailable.  This is a most likely a
+     * transient condition and may be corrected by retrying with
+     * a backoff.
+     *
+     * See litmus test above for deciding between FAILED_PRECONDITION,
+     * ABORTED, and UNAVAILABLE.
+     */
+    CanonicalCode[CanonicalCode["UNAVAILABLE"] = 14] = "UNAVAILABLE";
+    /**
+     * Unrecoverable data loss or corruption.
+     */
+    CanonicalCode[CanonicalCode["DATA_LOSS"] = 15] = "DATA_LOSS";
+    /**
+     * The request does not have valid authentication credentials for the
+     * operation.
+     */
+    CanonicalCode[CanonicalCode["UNAUTHENTICATED"] = 16] = "UNAUTHENTICATED";
+})(CanonicalCode = exports.CanonicalCode || (exports.CanonicalCode = {}));
+//# sourceMappingURL=status.js.map
+
+/***/ }),
 /* 884 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -50098,479 +52104,53 @@ function coerce (version, options) {
 /* 887 */,
 /* 888 */,
 /* 889 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
 "use strict";
-/*!
- * Copyright (c) Microsoft and contributors. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for
- * license information.
- * 
- * Azure Core LRO SDK for JavaScript - 1.0.2
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var tslib = __webpack_require__(422);
-
-// Copyright (c) Microsoft Corporation.
-/**
- * When a poller is manually stopped through the `stopPolling` method,
- * the poller will be rejected with an instance of the PollerStoppedError.
- */
-var PollerStoppedError = /** @class */ (function (_super) {
-    tslib.__extends(PollerStoppedError, _super);
-    function PollerStoppedError(message) {
-        var _this = _super.call(this, message) || this;
-        _this.name = "PollerStoppedError";
-        Object.setPrototypeOf(_this, PollerStoppedError.prototype);
-        return _this;
-    }
-    return PollerStoppedError;
-}(Error));
-/**
- * When a poller is cancelled through the `cancelOperation` method,
- * the poller will be rejected with an instance of the PollerCancelledError.
- */
-var PollerCancelledError = /** @class */ (function (_super) {
-    tslib.__extends(PollerCancelledError, _super);
-    function PollerCancelledError(message) {
-        var _this = _super.call(this, message) || this;
-        _this.name = "PollerCancelledError";
-        Object.setPrototypeOf(_this, PollerCancelledError.prototype);
-        return _this;
-    }
-    return PollerCancelledError;
-}(Error));
-/**
- * A class that represents the definition of a program that polls through consecutive requests
- * until it reaches a state of completion.
- *
- * A poller can be executed manually, by polling request by request by calling to the `poll()` method repeatedly, until its operation is completed.
- * It also provides a way to wait until the operation completes, by calling `pollUntilDone()` and waiting until the operation finishes.
- * Pollers can also request the cancellation of the ongoing process to whom is providing the underlying long running operation.
- *
- * ```ts
- * const poller = new MyPoller();
- *
- * // Polling just once:
- * await poller.poll();
- *
- * // We can try to cancel the request here, by calling:
- * //
- * //     await poller.cancelOperation();
- * //
- *
- * // Getting the final result:
- * const result = await poller.pollUntilDone();
- * ```
- *
- * The Poller is defined by two types, a type representing the state of the poller, which
- * must include a basic set of properties from `PollOperationState<TResult>`,
- * and a return type defined by `TResult`, which can be anything.
- *
- * The Poller class implements the `PollerLike` interface, which allows poller implementations to avoid having
- * to export the Poller's class directly, and instead only export the already instantiated poller with the PollerLike type.
- *
- * ```ts
- * class Client {
- *   public async makePoller: PollerLike<MyOperationState, MyResult> {
- *     const poller = new MyPoller({});
- *     // It might be preferred to return the poller after the first request is made,
- *     // so that some information can be obtained right away.
- *     await poller.poll();
- *     return poller;
- *   }
- * }
- *
- * const poller: PollerLike<MyOperationState, MyResult> = myClient.makePoller();
- * ```
- *
- * A poller can be created through its constructor, then it can be polled until it's completed.
- * At any point in time, the state of the poller can be obtained without delay through the getOperationState method.
- * At any point in time, the intermediate forms of the result type can be requested without delay.
- * Once the underlying operation is marked as completed, the poller will stop and the final value will be returned.
- *
- * ```ts
- * const poller = myClient.makePoller();
- * const state: MyOperationState = poller.getOperationState();
- *
- * // The intermediate result can be obtained at any time.
- * const result: MyResult | undefined = poller.getResult();
- *
- * // The final result can only be obtained after the poller finishes.
- * const result: MyResult = await poller.pollUntilDone();
- * ```
- *
- */
-var Poller = /** @class */ (function () {
-    /**
-     * A poller needs to be initialized by passing in at least the basic properties of the PollOperation<TState, TResult>.
-     *
-     * When writing an implementation of a Poller, this implementation needs to deal with the initialization
-     * of any custom state beyond the basic definition of the poller. The basic poller assumes that the poller's
-     * operation has already been defined, at least its basic properties. The code below shows how to approach
-     * the definition of the constructor of a new custom poller.
-     *
-     * ```ts
-     * export class MyPoller extends Poller<MyOperationState, string> {
-     *   constructor({
-     *     // Anything you might need outside of the basics
-     *   }) {
-     *     let state: MyOperationState = {
-     *       privateProperty: private,
-     *       publicProperty: public,
-     *     };
-     *
-     *     const operation = {
-     *       state,
-     *       update,
-     *       cancel,
-     *       toString
-     *     }
-     *
-     *     // Sending the operation to the parent's constructor.
-     *     super(operation);
-     *
-     *     // You can assign more local properties here.
-     *   }
-     * }
-     * ```
-     *
-     * Inside of this constructor, a new promise is created. This will be used to
-     * tell the user when the poller finishes (see `pollUntilDone()`). The promise's
-     * resolve and reject methods are also used internally to control when to resolve
-     * or reject anyone waiting for the poller to finish.
-     *
-     * The constructor of a custom implementation of a poller is where any serialized version of
-     * a previous poller's operation should be deserialized into the operation sent to the
-     * base constructor. For example:
-     *
-     * ```ts
-     * export class MyPoller extends Poller<MyOperationState, string> {
-     *   constructor(
-     *     baseOperation: string | undefined
-     *   ) {
-     *     let state: MyOperationState = {};
-     *     if (baseOperation) {
-     *       state = {
-     *         ...JSON.parse(baseOperation).state,
-     *         ...state
-     *       };
-     *     }
-     *     const operation = {
-     *       state,
-     *       // ...
-     *     }
-     *     super(operation);
-     *   }
-     * }
-     * ```
-     *
-     * @param operation Must contain the basic properties of PollOperation<State, TResult>.
-     */
-    function Poller(operation) {
-        var _this = this;
-        this.stopped = true;
-        this.pollProgressCallbacks = [];
-        this.operation = operation;
-        this.promise = new Promise(function (resolve, reject) {
-            _this.resolve = resolve;
-            _this.reject = reject;
-        });
-        // This prevents the UnhandledPromiseRejectionWarning in node.js from being thrown.
-        // The above warning would get thrown if `poller.poll` is called, it returns an error,
-        // and pullUntilDone did not have a .catch or await try/catch on it's return value.
-        this.promise.catch(function () { });
-    }
-    /**
-     * @internal
-     * @ignore
-     * Starts a loop that will break only if the poller is done
-     * or if the poller is stopped.
-     */
-    Poller.prototype.startPolling = function () {
-        return tslib.__awaiter(this, void 0, void 0, function () {
-            return tslib.__generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (this.stopped) {
-                            this.stopped = false;
-                        }
-                        _a.label = 1;
-                    case 1:
-                        if (!(!this.isStopped() && !this.isDone())) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.poll()];
-                    case 2:
-                        _a.sent();
-                        return [4 /*yield*/, this.delay()];
-                    case 3:
-                        _a.sent();
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
-    };
-    /**
-     * @internal
-     * @ignore
-     * pollOnce does one polling, by calling to the update method of the underlying
-     * poll operation to make any relevant change effective.
-     *
-     * It only optionally receives an object with an abortSignal property, from @azure/abort-controller's AbortSignalLike.
-     *
-     * @param options Optional properties passed to the operation's update method.
-     */
-    Poller.prototype.pollOnce = function (options) {
-        if (options === void 0) { options = {}; }
-        return tslib.__awaiter(this, void 0, void 0, function () {
-            var state, _a, e_1;
-            return tslib.__generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        state = this.operation.state;
-                        _b.label = 1;
-                    case 1:
-                        _b.trys.push([1, 4, , 5]);
-                        if (!!this.isDone()) return [3 /*break*/, 3];
-                        _a = this;
-                        return [4 /*yield*/, this.operation.update({
-                                abortSignal: options.abortSignal,
-                                fireProgress: this.fireProgress.bind(this)
-                            })];
-                    case 2:
-                        _a.operation = _b.sent();
-                        if (this.isDone() && this.resolve) {
-                            this.resolve(state.result);
-                        }
-                        _b.label = 3;
-                    case 3: return [3 /*break*/, 5];
-                    case 4:
-                        e_1 = _b.sent();
-                        state.error = e_1;
-                        if (this.reject) {
-                            this.reject(e_1);
-                        }
-                        throw e_1;
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
-    /**
-     * @internal
-     * @ignore
-     * fireProgress calls the functions passed in via onProgress the method of the poller.
-     *
-     * It loops over all of the callbacks received from onProgress, and executes them, sending them
-     * the current operation state.
-     *
-     * @param state The current operation state.
-     */
-    Poller.prototype.fireProgress = function (state) {
-        for (var _i = 0, _a = this.pollProgressCallbacks; _i < _a.length; _i++) {
-            var callback = _a[_i];
-            callback(state);
-        }
-    };
-    /**
-     * @internal
-     * @ignore
-     * Invokes the underlying operation's cancel method, and rejects the
-     * pollUntilDone promise.
-     */
-    Poller.prototype.cancelOnce = function (options) {
-        if (options === void 0) { options = {}; }
-        return tslib.__awaiter(this, void 0, void 0, function () {
-            var _a;
-            return tslib.__generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this;
-                        return [4 /*yield*/, this.operation.cancel(options)];
-                    case 1:
-                        _a.operation = _b.sent();
-                        if (this.reject) {
-                            this.reject(new PollerCancelledError("Poller cancelled"));
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    /**
-     * Returns a promise that will resolve once a single polling request finishes.
-     * It does this by calling the update method of the Poller's operation.
-     *
-     * It only optionally receives an object with an abortSignal property, from @azure/abort-controller's AbortSignalLike.
-     *
-     * @param options Optional properties passed to the operation's update method.
-     */
-    Poller.prototype.poll = function (options) {
-        var _this = this;
-        if (options === void 0) { options = {}; }
-        if (!this.pollOncePromise) {
-            this.pollOncePromise = this.pollOnce(options);
-            var clearPollOncePromise = function () {
-                _this.pollOncePromise = undefined;
-            };
-            this.pollOncePromise.then(clearPollOncePromise, clearPollOncePromise);
-        }
-        return this.pollOncePromise;
-    };
-    /**
-     * Returns a promise that will resolve once the underlying operation is completed.
-     */
-    Poller.prototype.pollUntilDone = function () {
-        return tslib.__awaiter(this, void 0, void 0, function () {
-            return tslib.__generator(this, function (_a) {
-                if (this.stopped) {
-                    this.startPolling().catch(this.reject);
-                }
-                return [2 /*return*/, this.promise];
-            });
-        });
-    };
-    /**
-     * Invokes the provided callback after each polling is completed,
-     * sending the current state of the poller's operation.
-     *
-     * It returns a method that can be used to stop receiving updates on the given callback function.
-     */
-    Poller.prototype.onProgress = function (callback) {
-        var _this = this;
-        this.pollProgressCallbacks.push(callback);
-        return function () {
-            _this.pollProgressCallbacks = _this.pollProgressCallbacks.filter(function (c) { return c !== callback; });
-        };
-    };
-    /**
-     * Returns true if the poller has finished polling.
-     */
-    Poller.prototype.isDone = function () {
-        var state = this.operation.state;
-        return Boolean(state.isCompleted || state.isCancelled || state.error);
-    };
-    /**
-     * Stops the poller from continuing to poll.
-     */
-    Poller.prototype.stopPolling = function () {
-        if (!this.stopped) {
-            this.stopped = true;
-            if (this.reject) {
-                this.reject(new PollerStoppedError("This poller is already stopped"));
-            }
-        }
-    };
-    /**
-     * Returns true if the poller is stopped.
-     */
-    Poller.prototype.isStopped = function () {
-        return this.stopped;
-    };
-    /**
-     * Attempts to cancel the underlying operation.
-     *
-     * It only optionally receives an object with an abortSignal property, from @azure/abort-controller's AbortSignalLike.
-     *
-     * If it's called again before it finishes, it will throw an error.
-     *
-     * @param options Optional properties passed to the operation's update method.
-     */
-    Poller.prototype.cancelOperation = function (options) {
-        if (options === void 0) { options = {}; }
-        if (!this.stopped) {
-            this.stopped = true;
-        }
-        if (!this.cancelPromise) {
-            this.cancelPromise = this.cancelOnce(options);
-        }
-        else if (options.abortSignal) {
-            throw new Error("A cancel request is currently pending");
-        }
-        return this.cancelPromise;
-    };
-    /**
-     * Returns the state of the operation.
-     *
-     * Even though TState will be the same type inside any of the methods of any extension of the Poller class,
-     * implementations of the pollers can customize what's shared with the public by writing their own
-     * version of the `getOperationState` method, and by defining two types, one representing the internal state of the poller
-     * and a public type representing a safe to share subset of the properties of the internal state.
-     * Their definition of getOperationState can then return their public type.
-     *
-     * Example:
-     *
-     * ```ts
-     * // Let's say we have our poller's operation state defined as:
-     * interface MyOperationState extends PollOperationState<ResultType> {
-     *   privateProperty?: string;
-     *   publicProperty?: string;
-     * }
-     *
-     * // To allow us to have a true separation of public and private state, we have to define another interface:
-     * interface PublicState extends PollOperationState<ResultType> {
-     *   publicProperty?: string;
-     * }
-     *
-     * // Then, we define our Poller as follows:
-     * export class MyPoller extends Poller<MyOperationState, ResultType> {
-     *   // ... More content is needed here ...
-     *
-     *   public getOperationState(): PublicState {
-     *     const state: PublicState = this.operation.state;
-     *     return {
-     *       // Properties from PollOperationState<TResult>
-     *       isStarted: state.isStarted,
-     *       isCompleted: state.isCompleted,
-     *       isCancelled: state.isCancelled,
-     *       error: state.error,
-     *       result: state.result,
-     *
-     *       // The only other property needed by PublicState.
-     *       publicProperty: state.publicProperty
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * You can see this in the tests of this repository, go to the file:
-     * `../test/utils/testPoller.ts`
-     * and look for the getOperationState implementation.
-     */
-    Poller.prototype.getOperationState = function () {
-        return this.operation.state;
-    };
-    /**
-     * Returns the result value of the operation,
-     * regardless of the state of the poller.
-     * It can return undefined or an incomplete form of the final TResult value
-     * depending on the implementation.
-     */
-    Poller.prototype.getResult = function () {
-        var state = this.operation.state;
-        return state.result;
-    };
-    /**
-     * Returns a serialized version of the poller's operation
-     * by invoking the operation's toString method.
-     */
-    Poller.prototype.toString = function () {
-        return this.operation.toString();
-    };
-    return Poller;
-}());
-
-exports.Poller = Poller;
-exports.PollerCancelledError = PollerCancelledError;
-exports.PollerStoppedError = PollerStoppedError;
-//# sourceMappingURL=index.js.map
-
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=tracer_provider.js.map
 
 /***/ }),
-/* 890 */,
+/* 890 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=BatchObserverResult.js.map
+
+/***/ }),
 /* 891 */,
 /* 892 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -50654,7 +52234,661 @@ function descending(a, b)
 
 /***/ }),
 /* 893 */,
-/* 894 */,
+/* 894 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var api = __webpack_require__(827);
+var tslib = __webpack_require__(865);
+
+// Copyright (c) Microsoft Corporation.
+/**
+ * A no-op implementation of Span that can safely be used without side-effects.
+ */
+var NoOpSpan = /** @class */ (function () {
+    function NoOpSpan() {
+    }
+    /**
+     * Returns the SpanContext associated with this Span.
+     */
+    NoOpSpan.prototype.context = function () {
+        return {
+            spanId: "",
+            traceId: "",
+            traceFlags: api.TraceFlags.NONE
+        };
+    };
+    /**
+     * Marks the end of Span execution.
+     * @param _endTime The time to use as the Span's end time. Defaults to
+     * the current time.
+     */
+    NoOpSpan.prototype.end = function (_endTime) {
+        /* Noop */
+    };
+    /**
+     * Sets an attribute on the Span
+     * @param _key the attribute key
+     * @param _value the attribute value
+     */
+    NoOpSpan.prototype.setAttribute = function (_key, _value) {
+        return this;
+    };
+    /**
+     * Sets attributes on the Span
+     * @param _attributes the attributes to add
+     */
+    NoOpSpan.prototype.setAttributes = function (_attributes) {
+        return this;
+    };
+    /**
+     * Adds an event to the Span
+     * @param _name The name of the event
+     * @param _attributes The associated attributes to add for this event
+     */
+    NoOpSpan.prototype.addEvent = function (_name, _attributes) {
+        return this;
+    };
+    /**
+     * Sets a status on the span. Overrides the default of CanonicalCode.OK.
+     * @param _status The status to set.
+     */
+    NoOpSpan.prototype.setStatus = function (_status) {
+        return this;
+    };
+    /**
+     * Updates the name of the Span
+     * @param _name the new Span name
+     */
+    NoOpSpan.prototype.updateName = function (_name) {
+        return this;
+    };
+    /**
+     * Returns whether this span will be recorded
+     */
+    NoOpSpan.prototype.isRecording = function () {
+        return false;
+    };
+    return NoOpSpan;
+}());
+
+// Copyright (c) Microsoft Corporation.
+/**
+ * A no-op implementation of Tracer that can be used when tracing
+ * is disabled.
+ */
+var NoOpTracer = /** @class */ (function () {
+    function NoOpTracer() {
+    }
+    /**
+     * Starts a new Span.
+     * @param _name The name of the span.
+     * @param _options The SpanOptions used during Span creation.
+     */
+    NoOpTracer.prototype.startSpan = function (_name, _options) {
+        return new NoOpSpan();
+    };
+    /**
+     * Returns the current Span from the current context, if available.
+     */
+    NoOpTracer.prototype.getCurrentSpan = function () {
+        return new NoOpSpan();
+    };
+    /**
+     * Executes the given function within the context provided by a Span.
+     * @param _span The span that provides the context.
+     * @param fn The function to be executed.
+     */
+    NoOpTracer.prototype.withSpan = function (_span, fn) {
+        return fn();
+    };
+    /**
+     * Bind a Span as the target's scope
+     * @param target An object to bind the scope.
+     * @param _span A specific Span to use. Otherwise, use the current one.
+     */
+    NoOpTracer.prototype.bind = function (target, _span) {
+        return target;
+    };
+    return NoOpTracer;
+}());
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+function getGlobalObject() {
+    return global;
+}
+
+// Copyright (c) Microsoft Corporation.
+// V1 = OpenTelemetry 0.1
+// V2 = OpenTelemetry 0.2
+// V3 = OpenTelemetry 0.6.1
+var GLOBAL_TRACER_VERSION = 3;
+// preview5 shipped with @azure/core-tracing.tracerCache
+// and didn't have smart detection for collisions
+var GLOBAL_TRACER_SYMBOL = Symbol.for("@azure/core-tracing.tracerCache2");
+var cache;
+function loadTracerCache() {
+    var globalObj = getGlobalObject();
+    var existingCache = globalObj[GLOBAL_TRACER_SYMBOL];
+    var setGlobalCache = true;
+    if (existingCache) {
+        if (existingCache.version === GLOBAL_TRACER_VERSION) {
+            cache = existingCache;
+        }
+        else {
+            setGlobalCache = false;
+            if (existingCache.tracer) {
+                throw new Error("Two incompatible versions of @azure/core-tracing have been loaded.\n          This library is " + GLOBAL_TRACER_VERSION + ", existing is " + existingCache.version + ".");
+            }
+        }
+    }
+    if (!cache) {
+        cache = {
+            tracer: undefined,
+            version: GLOBAL_TRACER_VERSION
+        };
+    }
+    if (setGlobalCache) {
+        globalObj[GLOBAL_TRACER_SYMBOL] = cache;
+    }
+}
+function getCache() {
+    if (!cache) {
+        loadTracerCache();
+    }
+    return cache;
+}
+
+// Copyright (c) Microsoft Corporation.
+var defaultTracer;
+function getDefaultTracer() {
+    if (!defaultTracer) {
+        defaultTracer = new NoOpTracer();
+    }
+    return defaultTracer;
+}
+/**
+ * Sets the global tracer, enabling tracing for the Azure SDK.
+ * @param tracer An OpenTelemetry Tracer instance.
+ */
+function setTracer(tracer) {
+    var cache = getCache();
+    cache.tracer = tracer;
+}
+/**
+ * Retrieves the active tracer, or returns a
+ * no-op implementation if one is not set.
+ */
+function getTracer() {
+    var cache = getCache();
+    if (!cache.tracer) {
+        return getDefaultTracer();
+    }
+    return cache.tracer;
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * @ignore
+ * @internal
+ */
+var OpenCensusTraceStateWrapper = /** @class */ (function () {
+    function OpenCensusTraceStateWrapper(state) {
+        this._state = state;
+    }
+    OpenCensusTraceStateWrapper.prototype.get = function (_key) {
+        throw new Error("Method not implemented.");
+    };
+    OpenCensusTraceStateWrapper.prototype.set = function (_key, _value) {
+        throw new Error("Method not implemented.");
+    };
+    OpenCensusTraceStateWrapper.prototype.unset = function (_key) {
+        throw new Error("Method not implemented");
+    };
+    OpenCensusTraceStateWrapper.prototype.serialize = function () {
+        return this._state || "";
+    };
+    return OpenCensusTraceStateWrapper;
+}());
+
+// Copyright (c) Microsoft Corporation.
+function isWrappedSpan(span) {
+    return !!span && span.getWrappedSpan !== undefined;
+}
+function isTracer(tracerOrSpan) {
+    return tracerOrSpan.getWrappedTracer !== undefined;
+}
+/**
+ * An implementation of OpenTelemetry Span that wraps an OpenCensus Span.
+ */
+var OpenCensusSpanWrapper = /** @class */ (function () {
+    function OpenCensusSpanWrapper(tracerOrSpan, name, options) {
+        if (name === void 0) { name = ""; }
+        if (options === void 0) { options = {}; }
+        if (isTracer(tracerOrSpan)) {
+            var parent = isWrappedSpan(options.parent) ? options.parent.getWrappedSpan() : undefined;
+            this._span = tracerOrSpan.getWrappedTracer().startChildSpan({
+                name: name,
+                childOf: parent
+            });
+            this._span.start();
+            if (options.links) {
+                for (var _i = 0, _a = options.links; _i < _a.length; _i++) {
+                    var link = _a[_i];
+                    // Since there is no way to set the link relationship, leave it as Unspecified.
+                    this._span.addLink(link.context.traceId, link.context.spanId, 0 /* LinkType.UNSPECIFIED */, link.attributes);
+                }
+            }
+        }
+        else {
+            this._span = tracerOrSpan;
+        }
+    }
+    /**
+     * The underlying OpenCensus Span
+     */
+    OpenCensusSpanWrapper.prototype.getWrappedSpan = function () {
+        return this._span;
+    };
+    /**
+     * Marks the end of Span execution.
+     * @param endTime The time to use as the Span's end time. Defaults to
+     * the current time.
+     */
+    OpenCensusSpanWrapper.prototype.end = function (_endTime) {
+        this._span.end();
+    };
+    /**
+     * Returns the SpanContext associated with this Span.
+     */
+    OpenCensusSpanWrapper.prototype.context = function () {
+        var openCensusSpanContext = this._span.spanContext;
+        return {
+            spanId: openCensusSpanContext.spanId,
+            traceId: openCensusSpanContext.traceId,
+            traceFlags: openCensusSpanContext.options,
+            traceState: new OpenCensusTraceStateWrapper(openCensusSpanContext.traceState)
+        };
+    };
+    /**
+     * Sets an attribute on the Span
+     * @param key the attribute key
+     * @param value the attribute value
+     */
+    OpenCensusSpanWrapper.prototype.setAttribute = function (key, value) {
+        this._span.addAttribute(key, value);
+        return this;
+    };
+    /**
+     * Sets attributes on the Span
+     * @param attributes the attributes to add
+     */
+    OpenCensusSpanWrapper.prototype.setAttributes = function (attributes) {
+        this._span.attributes = attributes;
+        return this;
+    };
+    /**
+     * Adds an event to the Span
+     * @param name The name of the event
+     * @param attributes The associated attributes to add for this event
+     */
+    OpenCensusSpanWrapper.prototype.addEvent = function (_name, _attributes) {
+        throw new Error("Method not implemented.");
+    };
+    /**
+     * Sets a status on the span. Overrides the default of CanonicalCode.OK.
+     * @param status The status to set.
+     */
+    OpenCensusSpanWrapper.prototype.setStatus = function (status) {
+        this._span.setStatus(status.code, status.message);
+        return this;
+    };
+    /**
+     * Updates the name of the Span
+     * @param name the new Span name
+     */
+    OpenCensusSpanWrapper.prototype.updateName = function (name) {
+        this._span.name = name;
+        return this;
+    };
+    /**
+     * Returns whether this span will be recorded
+     */
+    OpenCensusSpanWrapper.prototype.isRecording = function () {
+        // NoRecordSpans have an empty traceId
+        return !!this._span.traceId;
+    };
+    return OpenCensusSpanWrapper;
+}());
+
+// Copyright (c) Microsoft Corporation.
+/**
+ * An implementation of OpenTelemetry Tracer that wraps an OpenCensus Tracer.
+ */
+var OpenCensusTracerWrapper = /** @class */ (function () {
+    /**
+     * Create a new wrapper around a given OpenCensus Tracer.
+     * @param tracer The OpenCensus Tracer to wrap.
+     */
+    function OpenCensusTracerWrapper(tracer) {
+        this._tracer = tracer;
+    }
+    /**
+     * The wrapped OpenCensus Tracer
+     */
+    OpenCensusTracerWrapper.prototype.getWrappedTracer = function () {
+        return this._tracer;
+    };
+    /**
+     * Starts a new Span.
+     * @param name The name of the span.
+     * @param options The SpanOptions used during Span creation.
+     */
+    OpenCensusTracerWrapper.prototype.startSpan = function (name, options) {
+        return new OpenCensusSpanWrapper(this, name, options);
+    };
+    /**
+     * Returns the current Span from the current context, if available.
+     */
+    OpenCensusTracerWrapper.prototype.getCurrentSpan = function () {
+        return undefined;
+    };
+    /**
+     * Executes the given function within the context provided by a Span.
+     * @param _span The span that provides the context.
+     * @param _fn The function to be executed.
+     */
+    OpenCensusTracerWrapper.prototype.withSpan = function (_span, _fn) {
+        throw new Error("Method not implemented.");
+    };
+    /**
+     * Bind a Span as the target's scope
+     * @param target An object to bind the scope.
+     * @param _span A specific Span to use. Otherwise, use the current one.
+     */
+    OpenCensusTracerWrapper.prototype.bind = function (_target, _span) {
+        throw new Error("Method not implemented.");
+    };
+    return OpenCensusTracerWrapper;
+}());
+
+// Copyright (c) Microsoft Corporation.
+/**
+ * A mock span useful for testing.
+ */
+var TestSpan = /** @class */ (function (_super) {
+    tslib.__extends(TestSpan, _super);
+    /**
+     * Starts a new Span.
+     * @param parentTracer The tracer that created this Span
+     * @param name The name of the span.
+     * @param context The SpanContext this span belongs to
+     * @param kind The SpanKind of this Span
+     * @param parentSpanId The identifier of the parent Span
+     * @param startTime The startTime of the event (defaults to now)
+     */
+    function TestSpan(parentTracer, name, context, kind, parentSpanId, startTime) {
+        if (startTime === void 0) { startTime = Date.now(); }
+        var _this = _super.call(this) || this;
+        _this._tracer = parentTracer;
+        _this.name = name;
+        _this.kind = kind;
+        _this.startTime = startTime;
+        _this.parentSpanId = parentSpanId;
+        _this.status = {
+            code: api.CanonicalCode.OK
+        };
+        _this.endCalled = false;
+        _this._context = context;
+        _this.attributes = {};
+        return _this;
+    }
+    /**
+     * Returns the Tracer that created this Span
+     */
+    TestSpan.prototype.tracer = function () {
+        return this._tracer;
+    };
+    /**
+     * Returns the SpanContext associated with this Span.
+     */
+    TestSpan.prototype.context = function () {
+        return this._context;
+    };
+    /**
+     * Marks the end of Span execution.
+     * @param _endTime The time to use as the Span's end time. Defaults to
+     * the current time.
+     */
+    TestSpan.prototype.end = function (_endTime) {
+        this.endCalled = true;
+    };
+    /**
+     * Sets a status on the span. Overrides the default of CanonicalCode.OK.
+     * @param status The status to set.
+     */
+    TestSpan.prototype.setStatus = function (status) {
+        this.status = status;
+        return this;
+    };
+    /**
+     * Returns whether this span will be recorded
+     */
+    TestSpan.prototype.isRecording = function () {
+        return true;
+    };
+    /**
+     * Sets an attribute on the Span
+     * @param key the attribute key
+     * @param value the attribute value
+     */
+    TestSpan.prototype.setAttribute = function (key, value) {
+        this.attributes[key] = value;
+        return this;
+    };
+    /**
+     * Sets attributes on the Span
+     * @param attributes the attributes to add
+     */
+    TestSpan.prototype.setAttributes = function (attributes) {
+        for (var _i = 0, _a = Object.keys(attributes); _i < _a.length; _i++) {
+            var key = _a[_i];
+            this.attributes[key] = attributes[key];
+        }
+        return this;
+    };
+    return TestSpan;
+}(NoOpSpan));
+
+// Copyright (c) Microsoft Corporation.
+/**
+ * A mock tracer useful for testing
+ */
+var TestTracer = /** @class */ (function (_super) {
+    tslib.__extends(TestTracer, _super);
+    function TestTracer() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.traceIdCounter = 0;
+        _this.spanIdCounter = 0;
+        _this.rootSpans = [];
+        _this.knownSpans = [];
+        return _this;
+    }
+    TestTracer.prototype.getNextTraceId = function () {
+        this.traceIdCounter++;
+        return String(this.traceIdCounter);
+    };
+    TestTracer.prototype.getNextSpanId = function () {
+        this.spanIdCounter++;
+        return String(this.spanIdCounter);
+    };
+    /**
+     * Returns all Spans that were created without a parent
+     */
+    TestTracer.prototype.getRootSpans = function () {
+        return this.rootSpans;
+    };
+    /**
+     * Returns all Spans this Tracer knows about
+     */
+    TestTracer.prototype.getKnownSpans = function () {
+        return this.knownSpans;
+    };
+    /**
+     * Returns all Spans where end() has not been called
+     */
+    TestTracer.prototype.getActiveSpans = function () {
+        return this.knownSpans.filter(function (span) {
+            return !span.endCalled;
+        });
+    };
+    /**
+     * Return all Spans for a particular trace, grouped by their
+     * parent Span in a tree-like structure
+     * @param traceId The traceId to return the graph for
+     */
+    TestTracer.prototype.getSpanGraph = function (traceId) {
+        var traceSpans = this.knownSpans.filter(function (span) {
+            return span.context().traceId === traceId;
+        });
+        var roots = [];
+        var nodeMap = new Map();
+        for (var _i = 0, traceSpans_1 = traceSpans; _i < traceSpans_1.length; _i++) {
+            var span = traceSpans_1[_i];
+            var spanId = span.context().spanId;
+            var node = {
+                name: span.name,
+                children: []
+            };
+            nodeMap.set(spanId, node);
+            if (span.parentSpanId) {
+                var parent = nodeMap.get(span.parentSpanId);
+                if (!parent) {
+                    throw new Error("Span with name " + node.name + " has an unknown parentSpan with id " + span.parentSpanId);
+                }
+                parent.children.push(node);
+            }
+            else {
+                roots.push(node);
+            }
+        }
+        return {
+            roots: roots
+        };
+    };
+    /**
+     * Starts a new Span.
+     * @param name The name of the span.
+     * @param options The SpanOptions used during Span creation.
+     */
+    TestTracer.prototype.startSpan = function (name, options) {
+        if (options === void 0) { options = {}; }
+        var parentContext = this._getParentContext(options);
+        var traceId;
+        var isRootSpan = false;
+        if (parentContext && parentContext.traceId) {
+            traceId = parentContext.traceId;
+        }
+        else {
+            traceId = this.getNextTraceId();
+            isRootSpan = true;
+        }
+        var context = {
+            traceId: traceId,
+            spanId: this.getNextSpanId(),
+            traceFlags: api.TraceFlags.NONE
+        };
+        var span = new TestSpan(this, name, context, options.kind || api.SpanKind.INTERNAL, parentContext ? parentContext.spanId : undefined, options.startTime);
+        this.knownSpans.push(span);
+        if (isRootSpan) {
+            this.rootSpans.push(span);
+        }
+        return span;
+    };
+    TestTracer.prototype._getParentContext = function (options) {
+        var parent = options.parent;
+        var result;
+        if (parent) {
+            if ("traceId" in parent) {
+                result = parent;
+            }
+            else {
+                result = parent.context();
+            }
+        }
+        return result;
+    };
+    return TestTracer;
+}(NoOpTracer));
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+var VERSION = "00";
+/**
+ * Generates a `SpanContext` given a `traceparent` header value.
+ * @param traceParent Serialized span context data as a `traceparent` header value.
+ * @returns The `SpanContext` generated from the `traceparent` value.
+ */
+function extractSpanContextFromTraceParentHeader(traceParentHeader) {
+    var parts = traceParentHeader.split("-");
+    if (parts.length !== 4) {
+        return;
+    }
+    var version = parts[0], traceId = parts[1], spanId = parts[2], traceOptions = parts[3];
+    if (version !== VERSION) {
+        return;
+    }
+    var traceFlags = parseInt(traceOptions, 16);
+    var spanContext = {
+        spanId: spanId,
+        traceId: traceId,
+        traceFlags: traceFlags
+    };
+    return spanContext;
+}
+/**
+ * Generates a `traceparent` value given a span context.
+ * @param spanContext Contains context for a specific span.
+ * @returns The `spanContext` represented as a `traceparent` value.
+ */
+function getTraceParentHeader(spanContext) {
+    var missingFields = [];
+    if (!spanContext.traceId) {
+        missingFields.push("traceId");
+    }
+    if (!spanContext.spanId) {
+        missingFields.push("spanId");
+    }
+    if (missingFields.length) {
+        return;
+    }
+    var flags = spanContext.traceFlags || 0 /* NONE */;
+    var hexFlags = flags.toString(16);
+    var traceFlags = hexFlags.length === 1 ? "0" + hexFlags : hexFlags;
+    // https://www.w3.org/TR/trace-context/#traceparent-header-field-values
+    return VERSION + "-" + spanContext.traceId + "-" + spanContext.spanId + "-" + traceFlags;
+}
+
+exports.NoOpSpan = NoOpSpan;
+exports.NoOpTracer = NoOpTracer;
+exports.OpenCensusSpanWrapper = OpenCensusSpanWrapper;
+exports.OpenCensusTracerWrapper = OpenCensusTracerWrapper;
+exports.TestSpan = TestSpan;
+exports.TestTracer = TestTracer;
+exports.extractSpanContextFromTraceParentHeader = extractSpanContextFromTraceParentHeader;
+exports.getTraceParentHeader = getTraceParentHeader;
+exports.getTracer = getTracer;
+exports.setTracer = setTracer;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
 /* 895 */,
 /* 896 */
 /***/ (function(module) {
@@ -50789,7 +53023,66 @@ exports.retryHttpClientResponse = retryHttpClientResponse;
 /***/ }),
 /* 900 */,
 /* 901 */,
-/* 902 */,
+/* 902 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getOctokitOptions = exports.GitHub = exports.context = void 0;
+const Context = __importStar(__webpack_require__(262));
+const Utils = __importStar(__webpack_require__(127));
+// octokit + plugins
+const core_1 = __webpack_require__(448);
+const plugin_rest_endpoint_methods_1 = __webpack_require__(842);
+const plugin_paginate_rest_1 = __webpack_require__(299);
+exports.context = new Context.Context();
+const baseUrl = Utils.getApiBaseUrl();
+const defaults = {
+    baseUrl,
+    request: {
+        agent: Utils.getProxyAgent(baseUrl)
+    }
+};
+exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
+/**
+ * Convience function to correctly format Octokit Options to pass into the constructor.
+ *
+ * @param     token    the repo PAT or GITHUB_TOKEN
+ * @param     options  other options to set
+ */
+function getOctokitOptions(token, options) {
+    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
+    // Auth
+    const auth = Utils.getAuthString(token, opts);
+    if (auth) {
+        opts.auth = auth;
+    }
+    return opts;
+}
+exports.getOctokitOptions = getOctokitOptions;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
 /* 903 */
 /***/ (function(module) {
 
@@ -50846,7 +53139,38 @@ function state(list, sortMethod)
 /* 914 */,
 /* 915 */,
 /* 916 */,
-/* 917 */,
+/* 917 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TraceFlags = void 0;
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var TraceFlags;
+(function (TraceFlags) {
+    /** Represents no flag set. */
+    TraceFlags[TraceFlags["NONE"] = 0] = "NONE";
+    /** Bit to represent whether trace is sampled in trace flags. */
+    TraceFlags[TraceFlags["SAMPLED"] = 1] = "SAMPLED";
+})(TraceFlags = exports.TraceFlags || (exports.TraceFlags = {}));
+//# sourceMappingURL=trace_flags.js.map
+
+/***/ }),
 /* 918 */,
 /* 919 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -51661,24 +53985,27 @@ function terminator(callback)
 /* 947 */,
 /* 948 */,
 /* 949 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
-const SemVer = __webpack_require__(206)
+"use strict";
 
-const inc = (version, release, options, identifier) => {
-  if (typeof (options) === 'string') {
-    identifier = options
-    options = undefined
-  }
-
-  try {
-    return new SemVer(version, options).inc(release, identifier).version
-  } catch (er) {
-    return null
-  }
-}
-module.exports = inc
-
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=Meter.js.map
 
 /***/ }),
 /* 950 */
@@ -51797,7 +54124,87 @@ exports.checkBypass = checkBypass;
 /* 963 */,
 /* 964 */,
 /* 965 */,
-/* 966 */,
+/* 966 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Context = void 0;
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var Context = /** @class */ (function () {
+    /**
+     * Construct a new context which inherits values from an optional parent context.
+     *
+     * @param parentContext a context from which to inherit values
+     */
+    function Context(parentContext) {
+        this._currentContext = parentContext ? new Map(parentContext) : new Map();
+    }
+    /** Get a key to uniquely identify a context value */
+    Context.createKey = function (description) {
+        return Symbol(description);
+    };
+    /**
+     * Get a value from the context.
+     *
+     * @param key key which identifies a context value
+     */
+    Context.prototype.getValue = function (key) {
+        return this._currentContext.get(key);
+    };
+    /**
+     * Create a new context which inherits from this context and has
+     * the given key set to the given value.
+     *
+     * @param key context key for which to set the value
+     * @param value value to set for the given key
+     */
+    Context.prototype.setValue = function (key, value) {
+        var context = new Context(this._currentContext);
+        context._currentContext.set(key, value);
+        return context;
+    };
+    /**
+     * Return a new context which inherits from this context but does
+     * not contain a value for the given key.
+     *
+     * @param key context key for which to clear a value
+     */
+    Context.prototype.deleteValue = function (key) {
+        var context = new Context(this._currentContext);
+        context._currentContext.delete(key);
+        return context;
+    };
+    /** The root context is used as the default parent context when there is no active context */
+    Context.ROOT_CONTEXT = new Context();
+    /**
+     * This is another identifier to the root context which allows developers to easily search the
+     * codebase for direct uses of context which need to be removed in later PRs.
+     *
+     * It's existence is temporary and it should be removed when all references are fixed.
+     */
+    Context.TODO = Context.ROOT_CONTEXT;
+    return Context;
+}());
+exports.Context = Context;
+//# sourceMappingURL=context.js.map
+
+/***/ }),
 /* 967 */,
 /* 968 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -52299,11 +54706,303 @@ exports.RetryHelper = RetryHelper;
 //# sourceMappingURL=retry-helper.js.map
 
 /***/ }),
-/* 980 */,
+/* 980 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOOP_TRACER = exports.NoopTracer = void 0;
+var NoopSpan_1 = __webpack_require__(340);
+/**
+ * No-op implementations of {@link Tracer}.
+ */
+var NoopTracer = /** @class */ (function () {
+    function NoopTracer() {
+    }
+    NoopTracer.prototype.getCurrentSpan = function () {
+        return NoopSpan_1.NOOP_SPAN;
+    };
+    // startSpan starts a noop span.
+    NoopTracer.prototype.startSpan = function (name, options) {
+        return NoopSpan_1.NOOP_SPAN;
+    };
+    NoopTracer.prototype.withSpan = function (span, fn) {
+        return fn();
+    };
+    NoopTracer.prototype.bind = function (target, span) {
+        return target;
+    };
+    return NoopTracer;
+}());
+exports.NoopTracer = NoopTracer;
+exports.NOOP_TRACER = new NoopTracer();
+//# sourceMappingURL=NoopTracer.js.map
+
+/***/ }),
 /* 981 */,
-/* 982 */,
+/* 982 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOOP_BATCH_OBSERVER_METRIC = exports.NOOP_SUM_OBSERVER_METRIC = exports.NOOP_UP_DOWN_SUM_OBSERVER_METRIC = exports.NOOP_VALUE_OBSERVER_METRIC = exports.NOOP_BOUND_BASE_OBSERVER = exports.NOOP_VALUE_RECORDER_METRIC = exports.NOOP_BOUND_VALUE_RECORDER = exports.NOOP_COUNTER_METRIC = exports.NOOP_BOUND_COUNTER = exports.NOOP_METER = exports.NoopBoundBaseObserver = exports.NoopBoundValueRecorder = exports.NoopBoundCounter = exports.NoopBatchObserverMetric = exports.NoopBaseObserverMetric = exports.NoopValueRecorderMetric = exports.NoopCounterMetric = exports.NoopMetric = exports.NoopMeter = void 0;
+/**
+ * NoopMeter is a noop implementation of the {@link Meter} interface. It reuses
+ * constant NoopMetrics for all of its methods.
+ */
+var NoopMeter = /** @class */ (function () {
+    function NoopMeter() {
+    }
+    /**
+     * Returns constant noop value recorder.
+     * @param name the name of the metric.
+     * @param [options] the metric options.
+     */
+    NoopMeter.prototype.createValueRecorder = function (name, options) {
+        return exports.NOOP_VALUE_RECORDER_METRIC;
+    };
+    /**
+     * Returns a constant noop counter.
+     * @param name the name of the metric.
+     * @param [options] the metric options.
+     */
+    NoopMeter.prototype.createCounter = function (name, options) {
+        return exports.NOOP_COUNTER_METRIC;
+    };
+    /**
+     * Returns a constant noop UpDownCounter.
+     * @param name the name of the metric.
+     * @param [options] the metric options.
+     */
+    NoopMeter.prototype.createUpDownCounter = function (name, options) {
+        return exports.NOOP_COUNTER_METRIC;
+    };
+    /**
+     * Returns constant noop value observer.
+     * @param name the name of the metric.
+     * @param [options] the metric options.
+     * @param [callback] the value observer callback
+     */
+    NoopMeter.prototype.createValueObserver = function (name, options, callback) {
+        return exports.NOOP_VALUE_OBSERVER_METRIC;
+    };
+    /**
+     * Returns constant noop batch observer.
+     * @param name the name of the metric.
+     * @param callback the batch observer callback
+     */
+    NoopMeter.prototype.createBatchObserver = function (name, callback) {
+        return exports.NOOP_BATCH_OBSERVER_METRIC;
+    };
+    return NoopMeter;
+}());
+exports.NoopMeter = NoopMeter;
+var NoopMetric = /** @class */ (function () {
+    function NoopMetric(instrument) {
+        this._instrument = instrument;
+    }
+    /**
+     * Returns a Bound Instrument associated with specified Labels.
+     * It is recommended to keep a reference to the Bound Instrument instead of
+     * always calling this method for every operations.
+     * @param labels key-values pairs that are associated with a specific metric
+     *     that you want to record.
+     */
+    NoopMetric.prototype.bind = function (labels) {
+        return this._instrument;
+    };
+    /**
+     * Removes the Binding from the metric, if it is present.
+     * @param labels key-values pairs that are associated with a specific metric.
+     */
+    NoopMetric.prototype.unbind = function (labels) {
+        return;
+    };
+    /**
+     * Clears all timeseries from the Metric.
+     */
+    NoopMetric.prototype.clear = function () {
+        return;
+    };
+    return NoopMetric;
+}());
+exports.NoopMetric = NoopMetric;
+var NoopCounterMetric = /** @class */ (function (_super) {
+    __extends(NoopCounterMetric, _super);
+    function NoopCounterMetric() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NoopCounterMetric.prototype.add = function (value, labels) {
+        this.bind(labels).add(value);
+    };
+    return NoopCounterMetric;
+}(NoopMetric));
+exports.NoopCounterMetric = NoopCounterMetric;
+var NoopValueRecorderMetric = /** @class */ (function (_super) {
+    __extends(NoopValueRecorderMetric, _super);
+    function NoopValueRecorderMetric() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NoopValueRecorderMetric.prototype.record = function (value, labels, correlationContext, spanContext) {
+        if (typeof correlationContext === 'undefined') {
+            this.bind(labels).record(value);
+        }
+        else if (typeof spanContext === 'undefined') {
+            this.bind(labels).record(value, correlationContext);
+        }
+        else {
+            this.bind(labels).record(value, correlationContext, spanContext);
+        }
+    };
+    return NoopValueRecorderMetric;
+}(NoopMetric));
+exports.NoopValueRecorderMetric = NoopValueRecorderMetric;
+var NoopBaseObserverMetric = /** @class */ (function (_super) {
+    __extends(NoopBaseObserverMetric, _super);
+    function NoopBaseObserverMetric() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NoopBaseObserverMetric.prototype.observation = function () {
+        return {
+            observer: this,
+            value: 0,
+        };
+    };
+    return NoopBaseObserverMetric;
+}(NoopMetric));
+exports.NoopBaseObserverMetric = NoopBaseObserverMetric;
+var NoopBatchObserverMetric = /** @class */ (function (_super) {
+    __extends(NoopBatchObserverMetric, _super);
+    function NoopBatchObserverMetric() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return NoopBatchObserverMetric;
+}(NoopMetric));
+exports.NoopBatchObserverMetric = NoopBatchObserverMetric;
+var NoopBoundCounter = /** @class */ (function () {
+    function NoopBoundCounter() {
+    }
+    NoopBoundCounter.prototype.add = function (value) {
+        return;
+    };
+    return NoopBoundCounter;
+}());
+exports.NoopBoundCounter = NoopBoundCounter;
+var NoopBoundValueRecorder = /** @class */ (function () {
+    function NoopBoundValueRecorder() {
+    }
+    NoopBoundValueRecorder.prototype.record = function (value, correlationContext, spanContext) {
+        return;
+    };
+    return NoopBoundValueRecorder;
+}());
+exports.NoopBoundValueRecorder = NoopBoundValueRecorder;
+var NoopBoundBaseObserver = /** @class */ (function () {
+    function NoopBoundBaseObserver() {
+    }
+    NoopBoundBaseObserver.prototype.update = function (value) { };
+    return NoopBoundBaseObserver;
+}());
+exports.NoopBoundBaseObserver = NoopBoundBaseObserver;
+exports.NOOP_METER = new NoopMeter();
+exports.NOOP_BOUND_COUNTER = new NoopBoundCounter();
+exports.NOOP_COUNTER_METRIC = new NoopCounterMetric(exports.NOOP_BOUND_COUNTER);
+exports.NOOP_BOUND_VALUE_RECORDER = new NoopBoundValueRecorder();
+exports.NOOP_VALUE_RECORDER_METRIC = new NoopValueRecorderMetric(exports.NOOP_BOUND_VALUE_RECORDER);
+exports.NOOP_BOUND_BASE_OBSERVER = new NoopBoundBaseObserver();
+exports.NOOP_VALUE_OBSERVER_METRIC = new NoopBaseObserverMetric(exports.NOOP_BOUND_BASE_OBSERVER);
+exports.NOOP_UP_DOWN_SUM_OBSERVER_METRIC = new NoopBaseObserverMetric(exports.NOOP_BOUND_BASE_OBSERVER);
+exports.NOOP_SUM_OBSERVER_METRIC = new NoopBaseObserverMetric(exports.NOOP_BOUND_BASE_OBSERVER);
+exports.NOOP_BATCH_OBSERVER_METRIC = new NoopBatchObserverMetric();
+//# sourceMappingURL=NoopMeter.js.map
+
+/***/ }),
 /* 983 */,
-/* 984 */,
+/* 984 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NOOP_METER_PROVIDER = exports.NoopMeterProvider = void 0;
+var NoopMeter_1 = __webpack_require__(982);
+/**
+ * An implementation of the {@link MeterProvider} which returns an impotent Meter
+ * for all calls to `getMeter`
+ */
+var NoopMeterProvider = /** @class */ (function () {
+    function NoopMeterProvider() {
+    }
+    NoopMeterProvider.prototype.getMeter = function (_name, _version) {
+        return NoopMeter_1.NOOP_METER;
+    };
+    return NoopMeterProvider;
+}());
+exports.NoopMeterProvider = NoopMeterProvider;
+exports.NOOP_METER_PROVIDER = new NoopMeterProvider();
+//# sourceMappingURL=NoopMeterProvider.js.map
+
+/***/ }),
 /* 985 */,
 /* 986 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -52405,7 +55104,37 @@ exports.exec = exec;
 
 
 /***/ }),
-/* 993 */,
+/* 993 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ValueType = void 0;
+/** The Type of value. It describes how the data is reported. */
+var ValueType;
+(function (ValueType) {
+    ValueType[ValueType["INT"] = 0] = "INT";
+    ValueType[ValueType["DOUBLE"] = 1] = "DOUBLE";
+})(ValueType = exports.ValueType || (exports.ValueType = {}));
+//# sourceMappingURL=Metric.js.map
+
+/***/ }),
 /* 994 */,
 /* 995 */,
 /* 996 */,
@@ -52426,7 +55155,7 @@ var tslib = __webpack_require__(865);
 var tough = __webpack_require__(393);
 var http = __webpack_require__(605);
 var https = __webpack_require__(211);
-__webpack_require__(454);
+var node_fetch = _interopDefault(__webpack_require__(454));
 var abortController = __webpack_require__(106);
 var FormData = _interopDefault(__webpack_require__(790));
 var util = __webpack_require__(669);
@@ -52436,8 +55165,8 @@ var coreAuth = __webpack_require__(229);
 var logger$1 = __webpack_require__(928);
 var xml2js = __webpack_require__(992);
 var os = __webpack_require__(87);
-var coreTracing = __webpack_require__(263);
-var api = __webpack_require__(440);
+var coreTracing = __webpack_require__(894);
+var api = __webpack_require__(827);
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
@@ -52613,7 +55342,7 @@ var Constants = {
      * @const
      * @type {string}
      */
-    coreHttpVersion: "1.1.4",
+    coreHttpVersion: "1.1.6",
     /**
      * Specifies HTTP.
      *
@@ -54920,11 +57649,6 @@ function isValidPort(port) {
 }
 
 // Copyright (c) Microsoft Corporation.
-var globalWithFetch = global;
-if (typeof globalWithFetch.fetch !== "function") {
-    var fetch_1 = __webpack_require__(454).default;
-    globalWithFetch.fetch = fetch_1;
-}
 function getCachedAgent(isHttps, agentCache) {
     return isHttps ? agentCache.httpsAgent : agentCache.httpAgent;
 }
@@ -54981,7 +57705,7 @@ var NodeFetchHttpClient = /** @class */ (function (_super) {
     NodeFetchHttpClient.prototype.fetch = function (input, init) {
         return tslib.__awaiter(this, void 0, void 0, function () {
             return tslib.__generator(this, function (_a) {
-                return [2 /*return*/, fetch(input, init)];
+                return [2 /*return*/, node_fetch(input, init)];
             });
         });
     };
