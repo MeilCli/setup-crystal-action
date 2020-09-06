@@ -36,53 +36,58 @@ jobs:
     if: github.event_name  != 'pull_request'
     strategy:
       matrix:
-        # crystal 0.34.0 has breaking change, shards 0.10.0 needs crsytal 0.34.0, and shards 0.9.0 needs less than or equal to crystal 0.33.0
-        # ubuntu-18.04 fails shards 0.10.0: https://forum.crystal-lang.org/t/compiling-an-app-to-work-on-both-ubuntu-16-and-18/328
         os: [ubuntu-16.04, ubuntu-18.04, macos-10.15]
-        crystal: [0.33.0, 0.34.0, latest]
-        shards: [0.9.0, 0.10.0, latest]
-        exclude:
+        include:
+          # latest, latest
           - os: ubuntu-16.04
-            crystal: 0.33.0
-            shards: 0.10.0
-          - os: ubuntu-16.04
-            crystal: 0.33.0
+            crystal: latest
             shards: latest
           - os: ubuntu-18.04
-            crystal: 0.33.0
-            shards: 0.10.0
-          - os: ubuntu-18.04
-            crystal: 0.33.0
+            crystal: latest
             shards: latest
           - os: macos-10.15
-            crystal: 0.33.0
-            shards: 0.10.0
-          - os: macos-10.15
-            crystal: 0.33.0
+            crystal: latest
             shards: latest
+          # 0.35.0, 0.12.0
+          # shards 0.12.0 has breaking change, shards 0.12.0 needs crystal 0.35.0
           - os: ubuntu-16.04
-            crystal: 0.34.0
-            shards: 0.9.0
+            crystal: 0.35.0
+            shards: 0.12.0
           - os: ubuntu-18.04
-            crystal: 0.34.0
-            shards: 0.9.0
+            crystal: 0.35.0
+            shards: 0.12.0
+          - os: macos-10.15
+            crystal: 0.35.0
+            shards: 0.12.0
+          # 0.35.0, 0.11.0
+          # crystal 0.35.0 has breaking change, crystal 0.35.0 need shards 0.11.0
+          - os: ubuntu-16.04
+            crystal: 0.35.0
+            shards: 0.11.0
           - os: ubuntu-18.04
+            crystal: 0.35.0
+            shards: 0.11.0
+          - os: macos-10.15
+            crystal: 0.35.0
+            shards: 0.11.0
+          # 0.34.0, 0.10.0
+          # crystal 0.34.0 has breaking change, shards 0.10.0 needs crsytal 0.34.0
+          # ubuntu-18.04 fails shards 0.10.0: https://forum.crystal-lang.org/t/compiling-an-app-to-work-on-both-ubuntu-16-and-18/328
+          - os: ubuntu-16.04
             crystal: 0.34.0
             shards: 0.10.0
           - os: macos-10.15
             crystal: 0.34.0
-            shards: 0.9.0
-          - os: ubuntu-16.04
-            crystal: latest
-            shards: 0.9.0
-          - os: ubuntu-18.04
-            crystal: latest
-            shards: 0.9.0
-          - os: ubuntu-18.04
-            crystal: latest
             shards: 0.10.0
+          # 0.33.0, 0.9.0
+          - os: ubuntu-16.04
+            crystal: 0.33.0
+            shards: 0.9.0
+          - os: ubuntu-18.04
+            crystal: 0.33.0
+            shards: 0.9.0
           - os: macos-10.15
-            crystal: latest
+            crystal: 0.33.0
             shards: 0.9.0
     runs-on: ${{ matrix.os }}
     steps:
