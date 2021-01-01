@@ -71,5 +71,8 @@ You can also pin to a [specific release](https://github.com/MeilCli/setup-crysta
 - `installed_shards_json`
   - installed json that GitHub Release
 
+## Contributing
+see [Contributing.md](./.github/CONTRIBUTING.md)
+
 ## License
 [MIT License](LICENSE)
