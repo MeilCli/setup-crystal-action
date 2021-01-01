@@ -12,10 +12,10 @@ import { Option } from "./main";
 import { Endpoints } from "@octokit/types";
 import { putShardsCacheKey } from "./state";
 
-type ReposGetReleaseByTagResponse = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"];
-type ReposGetLatestReleaseResponse = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"];
-type ReposGetReleaseByTag = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"]["data"];
-type ReposGetLatestRelease = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"]["data"];
+type ReposGetReleaseByTagResponse = Endpoints["GET /repos/{owner}/{repo}/releases/tags/{tag}"]["response"];
+type ReposGetLatestReleaseResponse = Endpoints["GET /repos/{owner}/{repo}/releases/latest"]["response"];
+type ReposGetReleaseByTag = Endpoints["GET /repos/{owner}/{repo}/releases/tags/{tag}"]["response"]["data"];
+type ReposGetLatestRelease = Endpoints["GET /repos/{owner}/{repo}/releases/latest"]["response"]["data"];
 
 const platform: string = os.platform();
 
@@ -92,6 +92,9 @@ async function installShardsToToolCache(
 
     let toolPath = tc.find("shards", installAsset.tag_name);
     if (!toolPath) {
+        if (installAsset.tarball_url == null) {
+            throw Error("release tarball url is null");
+        }
         const downloadPath = await tc.downloadTool(installAsset.tarball_url);
         const extractPath = await tc.extractTar(downloadPath);
         const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
@@ -151,6 +154,9 @@ async function installShardsToTemp(
 
     putShardsCacheKey(cacheKey);
 
+    if (installAsset.tarball_url == null) {
+        throw Error("release tarball url is null");
+    }
     const downloadPath = await tc.downloadTool(installAsset.tarball_url);
     const extractPath = await tc.extractTar(downloadPath);
     const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];

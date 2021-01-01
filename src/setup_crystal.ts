@@ -10,10 +10,10 @@ import { Option } from "./main";
 import { Endpoints } from "@octokit/types";
 import { putCrystalCacheKey } from "./state";
 
-type ReposGetReleaseByTagResponse = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"];
-type ReposGetLatestReleaseResponse = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"];
-type ReposGetReleaseByTagResponseAssetsItem = Endpoints["GET /repos/:owner/:repo/releases/tags/:tag"]["response"]["data"]["assets"][0];
-type ReposGetLatestReleaseResponseAssetsItem = Endpoints["GET /repos/:owner/:repo/releases/latest"]["response"]["data"]["assets"][0];
+type ReposGetReleaseByTagResponse = Endpoints["GET /repos/{owner}/{repo}/releases/tags/{tag}"]["response"];
+type ReposGetLatestReleaseResponse = Endpoints["GET /repos/{owner}/{repo}/releases/latest"]["response"];
+type ReposGetReleaseByTagResponseAssetsItem = Endpoints["GET /repos/{owner}/{repo}/releases/tags/{tag}"]["response"]["data"]["assets"][0];
+type ReposGetLatestReleaseResponseAssetsItem = Endpoints["GET /repos/{owner}/{repo}/releases/latest"]["response"]["data"]["assets"][0];
 
 const platform: string = os.platform();
 
