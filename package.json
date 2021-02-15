@@ -35,7 +35,7 @@
         "@actions/github": "^4.0.0",
         "@actions/io": "^1.0.2",
         "@actions/tool-cache": "^1.6.1",
-        "@octokit/plugin-rest-endpoint-methods": "^4.10.2",
+        "@octokit/plugin-rest-endpoint-methods": "^4.10.3",
         "semver": "^7.3.4"
     },
     "jest": {
