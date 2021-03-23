@@ -37,7 +37,7 @@
         "@actions/io": "^1.0.2",
         "@actions/tool-cache": "^1.6.1",
         "@octokit/plugin-rest-endpoint-methods": "^4.13.5",
-        "semver": "^7.3.4"
+        "semver": "^7.3.5"
     },
     "jest": {
         "clearMocks": true,
