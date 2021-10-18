@@ -19,6 +19,11 @@ type ReposGetLatestReleaseResponseAssetsItem =
 
 const platform: string = os.platform();
 
+// resource name changed since Crystal 1.2.0
+const oldDarwinPostfix = "-darwin-x86_64.tar.gz";
+const darwinPostfix = "-darwin-universal.tar.gz";
+const linuxPostfix = "-linux-x86_64.tar.gz";
+
 async function getInstallAsset(
     option: Option
 ): Promise<ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem> {
@@ -49,10 +54,9 @@ async function getInstallAsset(
 
     const fileUrls = assets.filter((x) => {
         if (platform == "darwin") {
-            // resource name changed since Crystal 1.2.0
-            return x.name.endsWith("-darwin-x86_64.tar.gz") || x.name.endsWith("-darwin-universal.tar.gz");
+            return x.name.endsWith(oldDarwinPostfix) || x.name.endsWith(darwinPostfix);
         } else {
-            return x.name.endsWith("-linux-x86_64.tar.gz");
+            return x.name.endsWith(linuxPostfix);
         }
     });
     const fileUrl = fileUrls.sort()[fileUrls.length - 1];
@@ -67,13 +71,17 @@ async function installNeedSoftware() {
 }
 
 export function toVersion(name: string): string {
-    return name.replace("crystal-", "").replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
+    return name
+        .replace("crystal-", "")
+        .replace(oldDarwinPostfix, "")
+        .replace(darwinPostfix, "")
+        .replace(linuxPostfix, "");
 }
 
 function getChildFolder(
     asset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem
 ): string {
-    return asset.name.replace("-darwin-x86_64.tar.gz", "").replace("-linux-x86_64.tar.gz", "");
+    return asset.name.replace(oldDarwinPostfix, "").replace(darwinPostfix, "").replace(linuxPostfix, "");
 }
 
 // return installed location
