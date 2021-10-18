@@ -49,7 +49,8 @@ async function getInstallAsset(
 
     const fileUrls = assets.filter((x) => {
         if (platform == "darwin") {
-            return x.name.endsWith("-darwin-x86_64.tar.gz");
+            // resource name changed since Crystal 1.2.0
+            return x.name.endsWith("-darwin-x86_64.tar.gz") || x.name.endsWith("-darwin-universal.tar.gz");
         } else {
             return x.name.endsWith("-linux-x86_64.tar.gz");
         }
