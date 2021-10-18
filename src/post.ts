@@ -17,7 +17,9 @@ async function run() {
             await cache.saveCache([shardsPath], shardsCacheKey);
         }
     } catch (error) {
-        core.error(error.message);
+        if (error instanceof Error) {
+            core.error(error.message);
+        }
     }
 }
 
