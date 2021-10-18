@@ -68905,9 +68905,11 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const option = getOption();
+            core.info(`installing crystal ${option.crystalVersion}`);
             const crystalInstalledPath = yield (0, setup_crystal_1.installCrystal)(option);
             yield exec.exec("crystal version");
             if (option.shardsVersion != "skip") {
+                core.info(`installing shard ${option.shardsVersion}`);
                 yield (0, setup_shards_1.installShards)(option, crystalInstalledPath);
             }
             if (option.cacheMode == "cache") {
