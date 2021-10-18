@@ -19,12 +19,12 @@ on:
 
 jobs:
   example:
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: MeilCli/setup-crystal-action@v4
         with: 
-          crystal_version: 0.34.0
-          shards_version: 0.10.0
+          crystal_version: latest
+          shards_version: latest
       - name: Run Crystal
         run: |
           echo 'puts "Hello Crystal"' > hello.cr
