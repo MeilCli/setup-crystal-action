@@ -43,9 +43,11 @@ function getOption(): Option {
 async function run() {
     try {
         const option = getOption();
+        core.info(`installing crystal ${option.crystalVersion}`);
         const crystalInstalledPath = await installCrystal(option);
         await exec.exec("crystal version");
         if (option.shardsVersion != "skip") {
+            core.info(`installing shard ${option.shardsVersion}`);
             await installShards(option, crystalInstalledPath);
         }
         if (option.cacheMode == "cache") {
