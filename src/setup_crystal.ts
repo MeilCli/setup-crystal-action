@@ -30,13 +30,13 @@ async function getInstallAsset(
     const client = github.getOctokit(option.githubToken);
     let response: ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse;
     if (option.crystalVersion != "latest") {
-        response = await client.repos.getReleaseByTag({
+        response = await client.rest.repos.getReleaseByTag({
             owner: "crystal-lang",
             repo: "crystal",
             tag: option.crystalVersion,
         });
     } else {
-        response = await client.repos.getLatestRelease({
+        response = await client.rest.repos.getLatestRelease({
             owner: "crystal-lang",
             repo: "crystal",
         });
