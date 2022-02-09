@@ -7836,26 +7836,53 @@ exports.isTokenCredential = isTokenCredential;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
 var uuid = __nccwpck_require__(3415);
+var util = __nccwpck_require__(3837);
+var tslib = __nccwpck_require__(2107);
+var xml2js = __nccwpck_require__(6189);
+var abortController = __nccwpck_require__(2557);
+var logger$1 = __nccwpck_require__(3233);
+var coreAuth = __nccwpck_require__(9645);
+var os = __nccwpck_require__(2037);
 var http = __nccwpck_require__(3685);
 var https = __nccwpck_require__(5687);
 var tough = __nccwpck_require__(8165);
-var abortController = __nccwpck_require__(2557);
 var tunnel = __nccwpck_require__(4294);
-var url = __nccwpck_require__(7310);
 var stream = __nccwpck_require__(2781);
-var FormData = _interopDefault(__nccwpck_require__(6279));
-var util = __nccwpck_require__(3837);
-var logger$1 = __nccwpck_require__(3233);
-var node_fetch = _interopDefault(__nccwpck_require__(467));
-var tslib = __nccwpck_require__(2107);
-var xml2js = __nccwpck_require__(6189);
-var coreAuth = __nccwpck_require__(9645);
-var os = __nccwpck_require__(2037);
+var FormData = __nccwpck_require__(6279);
+var node_fetch = __nccwpck_require__(467);
 var coreTracing = __nccwpck_require__(4175);
+var url = __nccwpck_require__(7310);
 __nccwpck_require__(6821);
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+function _interopNamespace(e) {
+    if (e && e.__esModule) return e;
+    var n = Object.create(null);
+    if (e) {
+        Object.keys(e).forEach(function (k) {
+            if (k !== 'default') {
+                var d = Object.getOwnPropertyDescriptor(e, k);
+                Object.defineProperty(n, k, d.get ? d : {
+                    enumerable: true,
+                    get: function () { return e[k]; }
+                });
+            }
+        });
+    }
+    n["default"] = e;
+    return Object.freeze(n);
+}
+
+var xml2js__namespace = /*#__PURE__*/_interopNamespace(xml2js);
+var os__namespace = /*#__PURE__*/_interopNamespace(os);
+var http__namespace = /*#__PURE__*/_interopNamespace(http);
+var https__namespace = /*#__PURE__*/_interopNamespace(https);
+var tough__namespace = /*#__PURE__*/_interopNamespace(tough);
+var tunnel__namespace = /*#__PURE__*/_interopNamespace(tunnel);
+var FormData__default = /*#__PURE__*/_interopDefaultLegacy(FormData);
+var node_fetch__default = /*#__PURE__*/_interopDefaultLegacy(node_fetch);
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
@@ -8044,7 +8071,7 @@ const Constants = {
     /**
      * The core-http version
      */
-    coreHttpVersion: "2.2.3",
+    coreHttpVersion: "2.2.4",
     /**
      * Specifies HTTP.
      */
@@ -10112,16 +10139,16 @@ function isUrlHttps(url) {
 }
 function createTunnel(isRequestHttps, isProxyHttps, tunnelOptions) {
     if (isRequestHttps && isProxyHttps) {
-        return tunnel.httpsOverHttps(tunnelOptions);
+        return tunnel__namespace.httpsOverHttps(tunnelOptions);
     }
     else if (isRequestHttps && !isProxyHttps) {
-        return tunnel.httpsOverHttp(tunnelOptions);
+        return tunnel__namespace.httpsOverHttp(tunnelOptions);
     }
     else if (!isRequestHttps && isProxyHttps) {
-        return tunnel.httpOverHttps(tunnelOptions);
+        return tunnel__namespace.httpOverHttps(tunnelOptions);
     }
     else {
-        return tunnel.httpOverHttp(tunnelOptions);
+        return tunnel__namespace.httpOverHttp(tunnelOptions);
     }
 }
 function isValidPort(port) {
@@ -10348,7 +10375,7 @@ class NodeFetchHttpClient {
         // a mapping of proxy settings string `${host}:${port}:${username}:${password}` to agent
         this.proxyAgentMap = new Map();
         this.keepAliveAgents = {};
-        this.cookieJar = new tough.CookieJar(undefined, { looseMode: true });
+        this.cookieJar = new tough__namespace.CookieJar(undefined, { looseMode: true });
     }
     /**
      * Provides minimum viable error handling and the logic that executes the abstract methods.
@@ -10380,7 +10407,7 @@ class NodeFetchHttpClient {
         }
         if (httpRequest.formData) {
             const formData = httpRequest.formData;
-            const requestForm = new FormData();
+            const requestForm = new FormData__default["default"]();
             const appendFormValue = (key, value) => {
                 // value function probably returns a stream so we can provide a fresh stream on each retry
                 if (typeof value === "function") {
@@ -10538,15 +10565,15 @@ class NodeFetchHttpClient {
                 keepAlive: httpRequest.keepAlive,
             };
             if (isHttps) {
-                agent = this.keepAliveAgents.httpsAgent = new https.Agent(agentOptions);
+                agent = this.keepAliveAgents.httpsAgent = new https__namespace.Agent(agentOptions);
             }
             else {
-                agent = this.keepAliveAgents.httpAgent = new http.Agent(agentOptions);
+                agent = this.keepAliveAgents.httpAgent = new http__namespace.Agent(agentOptions);
             }
             return agent;
         }
         else {
-            return isHttps ? https.globalAgent : http.globalAgent;
+            return isHttps ? https__namespace.globalAgent : http__namespace.globalAgent;
         }
     }
     /**
@@ -10554,7 +10581,7 @@ class NodeFetchHttpClient {
      */
     // eslint-disable-next-line @azure/azure-sdk/ts-apisurface-standardized-verbs
     async fetch(input, init) {
-        return node_fetch(input, init);
+        return node_fetch__default["default"](input, init);
     }
     /**
      * Prepares a request based on the provided web resource.
@@ -10602,6 +10629,11 @@ class NodeFetchHttpClient {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * The different levels of logs that can be used with the HttpPipelineLogger.
+ */
+exports.HttpPipelineLogLevel = void 0;
 (function (HttpPipelineLogLevel) {
     /**
      * A log level that indicates that no logs will be logged.
@@ -10773,7 +10805,7 @@ function stringifyXML(obj, opts = {}) {
     var _a;
     xml2jsBuilderSettings.rootName = opts.rootName;
     xml2jsBuilderSettings.charkey = (_a = opts.xmlCharKey) !== null && _a !== void 0 ? _a : XML_CHARKEY;
-    const builder = new xml2js.Builder(xml2jsBuilderSettings);
+    const builder = new xml2js__namespace.Builder(xml2jsBuilderSettings);
     return builder.buildObject(obj);
 }
 /**
@@ -10785,7 +10817,7 @@ function parseXML(str, opts = {}) {
     var _a;
     xml2jsParserSettings.explicitRoot = !!opts.includeRoot;
     xml2jsParserSettings.charkey = (_a = opts.xmlCharKey) !== null && _a !== void 0 ? _a : XML_CHARKEY;
-    const xmlParser = new xml2js.Parser(xml2jsParserSettings);
+    const xmlParser = new xml2js__namespace.Parser(xml2jsParserSettings);
     return new Promise((resolve, reject) => {
         if (!str) {
             reject(new Error("Document is empty"));
@@ -11206,7 +11238,7 @@ function isDefined(thing) {
 }
 
 // Copyright (c) Microsoft Corporation.
-const StandardAbortMessage = "The operation was aborted.";
+const StandardAbortMessage$1 = "The operation was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after delayInMs milliseconds.
  * @param delayInMs - The number of milliseconds to be delayed.
@@ -11221,7 +11253,7 @@ function delay(delayInMs, value, options) {
         let timer = undefined;
         let onAborted = undefined;
         const rejectOnAbort = () => {
-            return reject(new abortController.AbortError((options === null || options === void 0 ? void 0 : options.abortErrorMsg) ? options === null || options === void 0 ? void 0 : options.abortErrorMsg : StandardAbortMessage));
+            return reject(new abortController.AbortError((options === null || options === void 0 ? void 0 : options.abortErrorMsg) ? options === null || options === void 0 ? void 0 : options.abortErrorMsg : StandardAbortMessage$1));
         };
         const removeListeners = () => {
             if ((options === null || options === void 0 ? void 0 : options.abortSignal) && onAborted) {
@@ -11262,6 +11294,10 @@ function exponentialRetryPolicy(retryCount, retryInterval, maxRetryInterval) {
         },
     };
 }
+/**
+ * Describes the Retry Mode type. Currently supporting only Exponential.
+ */
+exports.RetryMode = void 0;
 (function (RetryMode) {
     /**
      * Currently supported retry mode.
@@ -11297,11 +11333,11 @@ class ExponentialRetryPolicy extends BaseRequestPolicy {
     sendRequest(request) {
         return this._nextPolicy
             .sendRequest(request.clone())
-            .then((response) => retry(this, request, response))
-            .catch((error) => retry(this, request, error.response, undefined, error));
+            .then((response) => retry$1(this, request, response))
+            .catch((error) => retry$1(this, request, error.response, undefined, error));
     }
 }
-async function retry(policy, request, response, retryData, requestError) {
+async function retry$1(policy, request, response, retryData, requestError) {
     function shouldPolicyRetry(responseParam) {
         const statusCode = responseParam === null || responseParam === void 0 ? void 0 : responseParam.status;
         if (statusCode === 503 && (response === null || response === void 0 ? void 0 : response.headers.get(Constants.HeaderConstants.RETRY_AFTER))) {
@@ -11326,10 +11362,10 @@ async function retry(policy, request, response, retryData, requestError) {
         try {
             await delay(retryData.retryInterval);
             const res = await policy._nextPolicy.sendRequest(request.clone());
-            return retry(policy, request, res, retryData);
+            return retry$1(policy, request, res, retryData);
         }
         catch (err) {
-            return retry(policy, request, response, retryData, err);
+            return retry$1(policy, request, response, retryData, err);
         }
     }
     else if (isAborted || requestError || !response) {
@@ -11469,7 +11505,7 @@ function getPlatformSpecificData() {
     };
     const osInfo = {
         key: "OS",
-        value: `(${os.arch()}-${os.type()}-${os.release()})`,
+        value: `(${os__namespace.arch()}-${os__namespace.type()}-${os__namespace.release()})`,
     };
     return [runtimeInfo, osInfo];
 }
@@ -11548,6 +11584,11 @@ class UserAgentPolicy extends BaseRequestPolicy {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * The format that will be used to join an array of values together for a query parameter value.
+ */
+exports.QueryCollectionFormat = void 0;
 (function (QueryCollectionFormat) {
     /**
      * CSV: Each pair of segments joined by a single comma.
@@ -12218,10 +12259,10 @@ class SystemErrorRetryPolicy extends BaseRequestPolicy {
     sendRequest(request) {
         return this._nextPolicy
             .sendRequest(request.clone())
-            .catch((error) => retry$1(this, request, error.response, error));
+            .catch((error) => retry(this, request, error.response, error));
     }
 }
-async function retry$1(policy, request, operationResponse, err, retryData) {
+async function retry(policy, request, operationResponse, err, retryData) {
     retryData = updateRetryData(policy, retryData, err);
     function shouldPolicyRetry(_response, error) {
         if (error &&
@@ -12242,7 +12283,7 @@ async function retry$1(policy, request, operationResponse, err, retryData) {
             return policy._nextPolicy.sendRequest(request.clone());
         }
         catch (nestedErr) {
-            return retry$1(policy, request, operationResponse, nestedErr, retryData);
+            return retry(policy, request, operationResponse, nestedErr, retryData);
         }
     }
     else {
@@ -12280,7 +12321,7 @@ function throttlingRetryPolicy() {
         },
     };
 }
-const StandardAbortMessage$1 = "The operation was aborted.";
+const StandardAbortMessage = "The operation was aborted.";
 /**
  * Creates a policy that re-sends the request if the response indicates the request failed because of throttling reasons.
  * For example, if the response contains a `Retry-After` header, it will retry sending the request based on the value of that header.
@@ -12315,10 +12356,10 @@ class ThrottlingRetryPolicy extends BaseRequestPolicy {
                 this.numberOfRetries += 1;
                 await delay(delayInMs, undefined, {
                     abortSignal: httpRequest.abortSignal,
-                    abortErrorMsg: StandardAbortMessage$1,
+                    abortErrorMsg: StandardAbortMessage,
                 });
                 if ((_a = httpRequest.abortSignal) === null || _a === void 0 ? void 0 : _a.aborted) {
-                    throw new abortController.AbortError(StandardAbortMessage$1);
+                    throw new abortController.AbortError(StandardAbortMessage);
                 }
                 if (this.numberOfRetries < DEFAULT_CLIENT_MAX_RETRY_COUNT) {
                     return this.sendRequest(httpRequest);
@@ -12398,10 +12439,9 @@ class TracingPolicy extends BaseRequestPolicy {
     tryCreateSpan(request) {
         var _a;
         try {
-            const path = URLBuilder.parse(request.url).getPath() || "/";
             // Passing spanOptions as part of tracingOptions to maintain compatibility @azure/core-tracing@preview.13 and earlier.
             // We can pass this as a separate parameter once we upgrade to the latest core-tracing.
-            const { span } = createSpan(path, {
+            const { span } = createSpan(`HTTP ${request.method}`, {
                 tracingOptions: {
                     spanOptions: Object.assign(Object.assign({}, request.spanOptions), { kind: coreTracing.SpanKind.CLIENT }),
                     tracingContext: request.tracingContext,
@@ -13272,9 +13312,7 @@ class TopicCredentials extends ApiKeyCredentials {
 
 Object.defineProperty(exports, "isTokenCredential", ({
     enumerable: true,
-    get: function () {
-        return coreAuth.isTokenCredential;
-    }
+    get: function () { return coreAuth.isTokenCredential; }
 }));
 exports.AccessTokenRefresher = AccessTokenRefresher;
 exports.ApiKeyCredentials = ApiKeyCredentials;
