@@ -29,6 +29,6 @@ outputs:
   installed_shards_json:
     description: 'installed shards asset of crystal-lang/shards Release'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/main/index.js'
   post: 'dist/post/index.js'
