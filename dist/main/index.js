@@ -69409,15 +69409,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
@@ -69438,7 +69429,7 @@ function getOption() {
     if (cacheMode == "tool-cache") {
         cacheModeValue = "tool-cache";
     }
-    if ((installRoot === null || installRoot === void 0 ? void 0 : installRoot.length) == 0) {
+    if (installRoot?.length == 0) {
         installRoot = null;
     }
     return {
@@ -69450,32 +69441,29 @@ function getOption() {
         installRoot: installRoot,
     };
 }
-function run() {
-    var _a;
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const option = getOption();
-            core.info(`installing crystal ${option.crystalVersion}`);
-            const crystalInstalledPath = yield (0, setup_crystal_1.installCrystal)(option);
-            yield exec.exec("crystal version");
-            if (option.shardsVersion != "skip") {
-                core.info(`installing shard ${option.shardsVersion}`);
-                yield (0, setup_shards_1.installShards)(option, crystalInstalledPath);
-            }
-            if (option.cacheMode == "cache") {
-                (0, state_1.putState)({
-                    requiredSaveCrystalCache: true,
-                    requiredSaveShardsCache: option.shardsVersion != "skip",
-                    installRoot: (_a = option.installRoot) !== null && _a !== void 0 ? _a : "",
-                });
-            }
+async function run() {
+    try {
+        const option = getOption();
+        core.info(`installing crystal ${option.crystalVersion}`);
+        const crystalInstalledPath = await (0, setup_crystal_1.installCrystal)(option);
+        await exec.exec("crystal version");
+        if (option.shardsVersion != "skip") {
+            core.info(`installing shard ${option.shardsVersion}`);
+            await (0, setup_shards_1.installShards)(option, crystalInstalledPath);
         }
-        catch (error) {
-            if (error instanceof Error) {
-                core.setFailed(error.message);
-            }
+        if (option.cacheMode == "cache") {
+            (0, state_1.putState)({
+                requiredSaveCrystalCache: true,
+                requiredSaveShardsCache: option.shardsVersion != "skip",
+                installRoot: option.installRoot ?? "",
+            });
         }
-    });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.setFailed(error.message);
+        }
+    }
 }
 run();
 
@@ -69510,15 +69498,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installCrystal = exports.toVersion = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -69535,48 +69514,44 @@ const platform = os.platform();
 const oldDarwinPostfix = "-darwin-x86_64.tar.gz";
 const darwinPostfix = "-darwin-universal.tar.gz";
 const linuxPostfix = "-linux-x86_64.tar.gz";
-function getInstallAsset(option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const client = github.getOctokit(option.githubToken);
-        let response;
-        if (option.crystalVersion != "latest") {
-            response = yield client.rest.repos.getReleaseByTag({
-                owner: "crystal-lang",
-                repo: "crystal",
-                tag: option.crystalVersion,
-            });
+async function getInstallAsset(option) {
+    const client = github.getOctokit(option.githubToken);
+    let response;
+    if (option.crystalVersion != "latest") {
+        response = await client.rest.repos.getReleaseByTag({
+            owner: "crystal-lang",
+            repo: "crystal",
+            tag: option.crystalVersion,
+        });
+    }
+    else {
+        response = await client.rest.repos.getLatestRelease({
+            owner: "crystal-lang",
+            repo: "crystal",
+        });
+    }
+    if (400 <= response.status) {
+        throw Error("fail get crystal releases");
+    }
+    const assets = [];
+    for (const asset of response.data.assets) {
+        assets.push(asset);
+    }
+    const fileUrls = assets.filter((x) => {
+        if (platform == "darwin") {
+            return x.name.endsWith(oldDarwinPostfix) || x.name.endsWith(darwinPostfix);
         }
         else {
-            response = yield client.rest.repos.getLatestRelease({
-                owner: "crystal-lang",
-                repo: "crystal",
-            });
+            return x.name.endsWith(linuxPostfix);
         }
-        if (400 <= response.status) {
-            throw Error("fail get crystal releases");
-        }
-        const assets = [];
-        for (const asset of response.data.assets) {
-            assets.push(asset);
-        }
-        const fileUrls = assets.filter((x) => {
-            if (platform == "darwin") {
-                return x.name.endsWith(oldDarwinPostfix) || x.name.endsWith(darwinPostfix);
-            }
-            else {
-                return x.name.endsWith(linuxPostfix);
-            }
-        });
-        const fileUrl = fileUrls.sort()[fileUrls.length - 1];
-        return fileUrl;
     });
+    const fileUrl = fileUrls.sort()[fileUrls.length - 1];
+    return fileUrl;
 }
-function installNeedSoftware() {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "linux") {
-            yield exec.exec("sudo apt-get install libevent-dev", undefined);
-        }
-    });
+async function installNeedSoftware() {
+    if (platform == "linux") {
+        await exec.exec("sudo apt-get install libevent-dev", undefined);
+    }
 }
 function toVersion(name) {
     return name
@@ -69590,77 +69565,71 @@ function getChildFolder(asset) {
     return asset.name.replace(oldDarwinPostfix, "").replace(darwinPostfix, "").replace(linuxPostfix, "");
 }
 // return installed location
-function installCrystal(option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "win32") {
-            throw Error("setup crystal action not support windows");
-        }
-        const installAsset = yield getInstallAsset(option);
-        const version = toVersion(installAsset.name);
-        if (option.cacheMode == "tool-cache") {
-            return yield installCrystalToUseToolCache(installAsset, version);
-        }
-        else {
-            return yield installCrystalToTemp(installAsset, version, option);
-        }
-    });
+async function installCrystal(option) {
+    if (platform == "win32") {
+        throw Error("setup crystal action not support windows");
+    }
+    const installAsset = await getInstallAsset(option);
+    const version = toVersion(installAsset.name);
+    if (option.cacheMode == "tool-cache") {
+        return await installCrystalToUseToolCache(installAsset, version);
+    }
+    else {
+        return await installCrystalToTemp(installAsset, version, option);
+    }
 }
 exports.installCrystal = installCrystal;
-function installCrystalToUseToolCache(installAsset, version) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let toolPath = tc.find("crystal", version);
-        if (!toolPath) {
-            const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
-            const extractPath = yield tc.extractTar(downloadPath);
-            toolPath = yield tc.cacheDir(extractPath, "crystal", version);
-        }
-        // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
-        // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
-        const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
-        core.addPath(binPath);
-        core.info(`crystal bin: ${binPath}`);
-        yield installNeedSoftware();
-        core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-        return path.join(toolPath, getChildFolder(installAsset));
-    });
+async function installCrystalToUseToolCache(installAsset, version) {
+    let toolPath = tc.find("crystal", version);
+    if (!toolPath) {
+        const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
+        const extractPath = await tc.extractTar(downloadPath);
+        toolPath = await tc.cacheDir(extractPath, "crystal", version);
+    }
+    // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
+    // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
+    const binPath = path.join(toolPath, getChildFolder(installAsset), "bin");
+    core.addPath(binPath);
+    core.info(`crystal bin: ${binPath}`);
+    await installNeedSoftware();
+    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+    return path.join(toolPath, getChildFolder(installAsset));
 }
-function installCrystalToTemp(installAsset, version, option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (option.installRoot == null) {
-            throw new Error("install root is null");
-        }
-        const crystalPath = path.join(option.installRoot, "crystal");
-        // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
-        // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
-        const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
-        // postfix number is internal version by this action
-        const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-crystal-${version}-8`;
-        try {
-            if (option.cacheMode == "cache") {
-                const fitKey = yield cache.restoreCache([crystalPath], cacheKey);
-                if (fitKey == cacheKey) {
-                    core.info("cache hit: crystal");
-                    core.addPath(binPath);
-                    core.info(`crystal bin: ${binPath}`);
-                    yield installNeedSoftware();
-                    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-                    return path.join(crystalPath, getChildFolder(installAsset));
-                }
+async function installCrystalToTemp(installAsset, version, option) {
+    if (option.installRoot == null) {
+        throw new Error("install root is null");
+    }
+    const crystalPath = path.join(option.installRoot, "crystal");
+    // crystal-0.31.1-1-darwin-x86_64/crystal-0.31.1-1/bin
+    // crystal-0.31.1-1-linux-x86_64/crystal-0.31.1-1/bin
+    const binPath = path.join(crystalPath, getChildFolder(installAsset), "bin");
+    // postfix number is internal version by this action
+    const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-crystal-${version}-8`;
+    try {
+        if (option.cacheMode == "cache") {
+            const fitKey = await cache.restoreCache([crystalPath], cacheKey);
+            if (fitKey == cacheKey) {
+                core.info("cache hit: crystal");
+                core.addPath(binPath);
+                core.info(`crystal bin: ${binPath}`);
+                await installNeedSoftware();
+                core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+                return path.join(crystalPath, getChildFolder(installAsset));
             }
         }
-        catch (error) {
-            core.info("fails cache restore");
-        }
-        (0, state_1.putCrystalCacheKey)(cacheKey);
-        const downloadPath = yield tc.downloadTool(installAsset.browser_download_url);
-        const extractPath = yield tc.extractTar(downloadPath);
-        yield io.cp(extractPath, crystalPath, { recursive: true, force: true });
-        core.addPath(binPath);
-        core.info(`crystal bin: ${binPath}`);
-        yield installNeedSoftware();
-        core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
-        return path.join(crystalPath, getChildFolder(installAsset));
-    });
+    }
+    catch (error) {
+        core.info("fails cache restore");
+    }
+    (0, state_1.putCrystalCacheKey)(cacheKey);
+    const downloadPath = await tc.downloadTool(installAsset.browser_download_url);
+    const extractPath = await tc.extractTar(downloadPath);
+    await io.cp(extractPath, crystalPath, { recursive: true, force: true });
+    core.addPath(binPath);
+    core.info(`crystal bin: ${binPath}`);
+    await installNeedSoftware();
+    core.setOutput("installed_crystal_json", JSON.stringify(installAsset));
+    return path.join(crystalPath, getChildFolder(installAsset));
 }
 
 
@@ -69694,15 +69663,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installShards = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -69717,153 +69677,141 @@ const fs = __importStar(__nccwpck_require__(7147));
 const semver = __importStar(__nccwpck_require__(1383));
 const state_1 = __nccwpck_require__(9738);
 const platform = os.platform();
-function getInstallAsset(option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const client = github.getOctokit(option.githubToken);
-        let response;
-        if (option.shardsVersion != "latest") {
-            response = yield client.rest.repos.getReleaseByTag({
-                owner: "crystal-lang",
-                repo: "shards",
-                tag: `v${option.shardsVersion}`,
-            });
-        }
-        else {
-            response = yield client.rest.repos.getLatestRelease({
-                owner: "crystal-lang",
-                repo: "shards",
-            });
-        }
-        if (400 <= response.status) {
-            throw Error("fail get crystal releases");
-        }
-        return response.data;
-    });
+async function getInstallAsset(option) {
+    const client = github.getOctokit(option.githubToken);
+    let response;
+    if (option.shardsVersion != "latest") {
+        response = await client.rest.repos.getReleaseByTag({
+            owner: "crystal-lang",
+            repo: "shards",
+            tag: `v${option.shardsVersion}`,
+        });
+    }
+    else {
+        response = await client.rest.repos.getLatestRelease({
+            owner: "crystal-lang",
+            repo: "shards",
+        });
+    }
+    if (400 <= response.status) {
+        throw Error("fail get crystal releases");
+    }
+    return response.data;
 }
-function installNeedSoftware() {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "linux") {
-            yield exec.exec("sudo apt-get install libyaml-dev", undefined);
-        }
-        if (platform == "darwin") {
-            yield exec.exec("brew install libyaml", undefined);
-        }
-    });
+async function installNeedSoftware() {
+    if (platform == "linux") {
+        await exec.exec("sudo apt-get install libyaml-dev", undefined);
+    }
+    if (platform == "darwin") {
+        await exec.exec("brew install libyaml", undefined);
+    }
 }
-function shardsInstall(crystalInstalledPath, sourcePath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "linux") {
-            yield exec.exec(`${crystalInstalledPath}/bin/shards install`, undefined, {
-                cwd: sourcePath,
-            });
-        }
-        if (platform == "darwin") {
-            yield exec.exec(`${crystalInstalledPath}/embedded/bin/shards install`, undefined, {
-                cwd: sourcePath,
-            });
-        }
-    });
+async function shardsInstall(crystalInstalledPath, sourcePath) {
+    if (platform == "linux") {
+        await exec.exec(`${crystalInstalledPath}/bin/shards install`, undefined, {
+            cwd: sourcePath,
+        });
+    }
+    if (platform == "darwin") {
+        await exec.exec(`${crystalInstalledPath}/embedded/bin/shards install`, undefined, {
+            cwd: sourcePath,
+        });
+    }
 }
-function installShards(option, crystalInstalledPath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (platform == "win32") {
-            throw Error("setup crystal action not support windows");
-        }
-        if (option.shardsVersion == null && platform == "linux") {
-            return;
-        }
-        const installAsset = yield getInstallAsset(option);
-        yield installNeedSoftware();
-        if (option.cacheMode == "tool-cache") {
-            yield installShardsToToolCache(installAsset, crystalInstalledPath, option);
-        }
-        else {
-            yield installShardsToTemp(installAsset, crystalInstalledPath, option);
-        }
-    });
+async function installShards(option, crystalInstalledPath) {
+    if (platform == "win32") {
+        throw Error("setup crystal action not support windows");
+    }
+    if (option.shardsVersion == null && platform == "linux") {
+        return;
+    }
+    const installAsset = await getInstallAsset(option);
+    await installNeedSoftware();
+    if (option.cacheMode == "tool-cache") {
+        await installShardsToToolCache(installAsset, crystalInstalledPath, option);
+    }
+    else {
+        await installShardsToTemp(installAsset, crystalInstalledPath, option);
+    }
 }
 exports.installShards = installShards;
-function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield installNeedSoftware();
-        let toolPath = tc.find("shards", installAsset.tag_name);
-        if (!toolPath) {
-            if (installAsset.tarball_url == null) {
-                throw Error("release tarball url is null");
-            }
-            const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
-            const extractPath = yield tc.extractTar(downloadPath);
-            const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
-            const sourcePath = path.join(extractPath, nestedFolder);
-            if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
-                // shards changes to require crystal-molinillo on 0.10.0
-                yield shardsInstall(crystalInstalledPath, sourcePath);
-                yield exec.exec("make", undefined, {
-                    cwd: sourcePath,
-                });
-            }
-            else {
-                yield exec.exec("make CRFLAGS=--release", undefined, {
-                    cwd: sourcePath,
-                });
-            }
-            toolPath = yield tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
-        }
-        const binPath = path.join(toolPath, "bin");
-        core.addPath(binPath);
-        core.info(`shards bin: ${binPath}`);
-        core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-    });
-}
-function installShardsToTemp(installAsset, crystalInstalledPath, option) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (option.installRoot == null) {
-            throw new Error("install root is null");
-        }
-        yield installNeedSoftware();
-        const shardsPath = path.join(option.installRoot, "shards");
-        const binPath = path.join(shardsPath, "bin");
-        // postfix number is internal version by this action
-        const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
-        try {
-            if (option.cacheMode == "cache") {
-                const fitKey = yield cache.restoreCache([shardsPath], cacheKey);
-                if (fitKey == cacheKey) {
-                    core.info("cache hit: shards");
-                    core.addPath(binPath);
-                    core.info(`shards bin: ${binPath}`);
-                    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-                    return;
-                }
-            }
-        }
-        catch (error) {
-            core.info("fails cache restore");
-        }
-        (0, state_1.putShardsCacheKey)(cacheKey);
+async function installShardsToToolCache(installAsset, crystalInstalledPath, option) {
+    await installNeedSoftware();
+    let toolPath = tc.find("shards", installAsset.tag_name);
+    if (!toolPath) {
         if (installAsset.tarball_url == null) {
             throw Error("release tarball url is null");
         }
-        const downloadPath = yield tc.downloadTool(installAsset.tarball_url);
-        const extractPath = yield tc.extractTar(downloadPath);
+        const downloadPath = await tc.downloadTool(installAsset.tarball_url);
+        const extractPath = await tc.extractTar(downloadPath);
         const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
-        yield io.cp(path.join(extractPath, nestedFolder), shardsPath, { recursive: true, force: true });
+        const sourcePath = path.join(extractPath, nestedFolder);
         if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
             // shards changes to require crystal-molinillo on 0.10.0
-            yield shardsInstall(crystalInstalledPath, shardsPath);
-            yield exec.exec("make", undefined, {
-                cwd: shardsPath,
+            await shardsInstall(crystalInstalledPath, sourcePath);
+            await exec.exec("make", undefined, {
+                cwd: sourcePath,
             });
         }
         else {
-            yield exec.exec("make CRFLAGS=--release", undefined, {
-                cwd: shardsPath,
+            await exec.exec("make CRFLAGS=--release", undefined, {
+                cwd: sourcePath,
             });
         }
-        core.addPath(binPath);
-        core.info(`shards bin: ${binPath}`);
-        core.setOutput("installed_shards_json", JSON.stringify(installAsset));
-    });
+        toolPath = await tc.cacheDir(sourcePath, "shards", installAsset.tag_name);
+    }
+    const binPath = path.join(toolPath, "bin");
+    core.addPath(binPath);
+    core.info(`shards bin: ${binPath}`);
+    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+}
+async function installShardsToTemp(installAsset, crystalInstalledPath, option) {
+    if (option.installRoot == null) {
+        throw new Error("install root is null");
+    }
+    await installNeedSoftware();
+    const shardsPath = path.join(option.installRoot, "shards");
+    const binPath = path.join(shardsPath, "bin");
+    // postfix number is internal version by this action
+    const cacheKey = `${option.cachePrefix}setup-crystal-${platform}-shards-${installAsset.tag_name}-8`;
+    try {
+        if (option.cacheMode == "cache") {
+            const fitKey = await cache.restoreCache([shardsPath], cacheKey);
+            if (fitKey == cacheKey) {
+                core.info("cache hit: shards");
+                core.addPath(binPath);
+                core.info(`shards bin: ${binPath}`);
+                core.setOutput("installed_shards_json", JSON.stringify(installAsset));
+                return;
+            }
+        }
+    }
+    catch (error) {
+        core.info("fails cache restore");
+    }
+    (0, state_1.putShardsCacheKey)(cacheKey);
+    if (installAsset.tarball_url == null) {
+        throw Error("release tarball url is null");
+    }
+    const downloadPath = await tc.downloadTool(installAsset.tarball_url);
+    const extractPath = await tc.extractTar(downloadPath);
+    const nestedFolder = fs.readdirSync(extractPath).filter((x) => x.startsWith("crystal"))[0];
+    await io.cp(path.join(extractPath, nestedFolder), shardsPath, { recursive: true, force: true });
+    if (option.shardsVersion == "latest" || semver.lte("0.10.0", option.shardsVersion)) {
+        // shards changes to require crystal-molinillo on 0.10.0
+        await shardsInstall(crystalInstalledPath, shardsPath);
+        await exec.exec("make", undefined, {
+            cwd: shardsPath,
+        });
+    }
+    else {
+        await exec.exec("make CRFLAGS=--release", undefined, {
+            cwd: shardsPath,
+        });
+    }
+    core.addPath(binPath);
+    core.info(`shards bin: ${binPath}`);
+    core.setOutput("installed_shards_json", JSON.stringify(installAsset));
 }
 
 
