@@ -59706,41 +59706,30 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const cache = __importStar(__nccwpck_require__(7799));
 const path = __importStar(__nccwpck_require__(1017));
 const state_1 = __nccwpck_require__(9738);
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const state = (0, state_1.getState)();
-            const crystalPath = path.join(state.installRoot, "crystal");
-            const crystalCacheKey = (0, state_1.getCrystalCacheKey)();
-            const shardsPath = path.join(state.installRoot, "shards");
-            const shardsCacheKey = (0, state_1.getShardsCacheKey)();
-            if (state.requiredSaveCrystalCache && crystalCacheKey != null) {
-                yield cache.saveCache([crystalPath], crystalCacheKey);
-            }
-            if (state.requiredSaveShardsCache && shardsCacheKey != null) {
-                yield cache.saveCache([shardsPath], shardsCacheKey);
-            }
+async function run() {
+    try {
+        const state = (0, state_1.getState)();
+        const crystalPath = path.join(state.installRoot, "crystal");
+        const crystalCacheKey = (0, state_1.getCrystalCacheKey)();
+        const shardsPath = path.join(state.installRoot, "shards");
+        const shardsCacheKey = (0, state_1.getShardsCacheKey)();
+        if (state.requiredSaveCrystalCache && crystalCacheKey != null) {
+            await cache.saveCache([crystalPath], crystalCacheKey);
         }
-        catch (error) {
-            if (error instanceof Error) {
-                core.error(error.message);
-            }
+        if (state.requiredSaveShardsCache && shardsCacheKey != null) {
+            await cache.saveCache([shardsPath], shardsCacheKey);
         }
-    });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.error(error.message);
+        }
+    }
 }
 run();
 
