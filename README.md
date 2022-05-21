@@ -1,5 +1,5 @@
 # setup-crystal-action
-![](https://github.com/MeilCli/setup-crystal-action/workflows/CI/badge.svg)  
+[![CI-Master](https://github.com/MeilCli/setup-crystal-action/actions/workflows/ci-master.yml/badge.svg)](https://github.com/MeilCli/setup-crystal-action/actions/workflows/ci-master.yml)  
 setup Crystal action for GitHub Actions.  
 
 ## Required
