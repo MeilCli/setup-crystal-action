@@ -71,8 +71,11 @@ You can also pin to a [specific release](https://github.com/MeilCli/setup-crysta
 - `installed_shards_json`
   - installed json that GitHub Release
 
-## Contributing
+## Contributes
+[<img src="https://gist.github.com/MeilCli/828476d51fc9574c495db18e559ed364/raw/3c739e396eb021930edb0a5e5d7a94871bc98042/metrics_contributors.svg">](https://github.com/MeilCli/setup-crystal-action/graphs/contributors)
+
+### Could you want to contribute?
 see [Contributing.md](./.github/CONTRIBUTING.md)
 
 ## License
-[MIT License](LICENSE)
+[<img src="https://gist.github.com/MeilCli/828476d51fc9574c495db18e559ed364/raw/3c739e396eb021930edb0a5e5d7a94871bc98042/metrics_licenses.svg">](LICENSE)
