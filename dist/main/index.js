@@ -48327,7 +48327,7 @@ const Endpoints = {
   }
 };
 
-const VERSION = "5.16.1";
+const VERSION = "5.16.2";
 
 function endpointsToMethods(octokit, endpointsMap) {
   const newMethods = {};
