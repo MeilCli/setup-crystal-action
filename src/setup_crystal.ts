@@ -48,7 +48,7 @@ async function getInstallAsset(
 
     const assets: Array<ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem> = [];
 
-    for (const asset of response.data.assets) {
+    for (const asset of response.data.assets ?? []) {
         assets.push(asset);
     }
 
@@ -59,6 +59,11 @@ async function getInstallAsset(
             return x.name.endsWith(linuxPostfix);
         }
     });
+
+    if (fileUrls.length == 0) {
+        throw Error(`cannot find binary assets: ${option.crystalVersion} crystal`);
+    }
+
     const fileUrl = fileUrls.sort()[fileUrls.length - 1];
 
     return fileUrl;
