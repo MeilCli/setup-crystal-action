@@ -39,6 +39,8 @@ You can also pin to a [specific release](https://github.com/MeilCli/setup-crysta
   - install crystal version
   - value: `latest` or version value, see [crystal-lang/crystal](https://github.com/crystal-lang/crystal/releases)
   - default: `latest`
+  - warning:
+    - `latest` sometimes cannot find crystal binary when immediately after release
 - `shards_version`
   - required
   - install shards version
