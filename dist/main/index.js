@@ -68851,7 +68851,7 @@ async function getInstallAsset(option) {
         throw Error("fail get crystal releases");
     }
     const assets = [];
-    for (const asset of response.data.assets) {
+    for (const asset of response.data.assets ?? []) {
         assets.push(asset);
     }
     const fileUrls = assets.filter((x) => {
@@ -68862,6 +68862,9 @@ async function getInstallAsset(option) {
             return x.name.endsWith(linuxPostfix);
         }
     });
+    if (fileUrls.length == 0) {
+        throw Error(`cannot find binary assets: ${option.crystalVersion} crystal`);
+    }
     const fileUrl = fileUrls.sort()[fileUrls.length - 1];
     return fileUrl;
 }
