@@ -62,13 +62,13 @@ jobs:
           cache_prefix: '${{ matrix.os }}-${{ matrix.crystal }}-${{ matrix.shards }}-'
       - run: crystal version
       - run: shards --version
-      - uses: MeilCli/test-command-action@v1
+      - uses: MeilCli/test-command-action@v3
         if: matrix.crystal != 'latest'
         name: Check Crystal Version
         with:
           command: crystal version
           expect_contain: 'Crystal ${{ matrix.crystal }}'
-      - uses: MeilCli/test-command-action@v1
+      - uses: MeilCli/test-command-action@v3
         if: matrix.shards != 'latest'
         name: Check Shards Version
         with:
