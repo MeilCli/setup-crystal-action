@@ -13359,7 +13359,7 @@ const Constants = {
     /**
      * The core-http version
      */
-    coreHttpVersion: "3.0.0",
+    coreHttpVersion: "3.0.2",
     /**
      * Specifies HTTP.
      */
@@ -13437,13 +13437,6 @@ const XML_CHARKEY = "_";
 
 // Copyright (c) Microsoft Corporation.
 const validUuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i;
-/**
- * A constant that indicates whether the environment is node.js or browser based.
- */
-const isNode = typeof process !== "undefined" &&
-    !!process.version &&
-    !!process.versions &&
-    !!process.versions.node;
 /**
  * Encodes an URI.
  *
@@ -18124,7 +18117,7 @@ function createDefaultRequestPolicyFactories(authPolicyFactory, options) {
         factories.push(throttlingRetryPolicy());
     }
     factories.push(deserializationPolicy(options.deserializationContentTypes));
-    if (isNode) {
+    if (coreUtil.isNode) {
         factories.push(proxyPolicy(options.proxySettings));
     }
     factories.push(logPolicy({ logger: logger.info }));
@@ -18156,7 +18149,7 @@ function createPipelineFromOptions(pipelineOptions, authPolicyFactory) {
     const keepAliveOptions = Object.assign(Object.assign({}, DefaultKeepAliveOptions), pipelineOptions.keepAliveOptions);
     const retryOptions = Object.assign(Object.assign({}, DefaultRetryOptions), pipelineOptions.retryOptions);
     const redirectOptions = Object.assign(Object.assign({}, DefaultRedirectOptions), pipelineOptions.redirectOptions);
-    if (isNode) {
+    if (coreUtil.isNode) {
         requestPolicyFactories.push(proxyPolicy(pipelineOptions.proxyOptions));
     }
     const deserializationOptions = Object.assign(Object.assign({}, DefaultDeserializationOptions), pipelineOptions.deserializationOptions);
@@ -18169,7 +18162,7 @@ function createPipelineFromOptions(pipelineOptions, authPolicyFactory) {
         requestPolicyFactories.push(authPolicyFactory);
     }
     requestPolicyFactories.push(logPolicy(loggingOptions));
-    if (isNode && pipelineOptions.decompressResponse === false) {
+    if (coreUtil.isNode && pipelineOptions.decompressResponse === false) {
         requestPolicyFactories.push(disableResponseDecompressionPolicy());
     }
     return {
@@ -18300,10 +18293,7 @@ function flattenResponse(_response, responseSpec) {
 }
 function getCredentialScopes(options, baseUri) {
     if (options === null || options === void 0 ? void 0 : options.credentialScopes) {
-        const scopes = options.credentialScopes;
-        return Array.isArray(scopes)
-            ? scopes.map((scope) => new URL(scope).toString())
-            : new URL(scopes).toString();
+        return options.credentialScopes;
     }
     if (baseUri) {
         return `${baseUri}/.default`;
@@ -18536,6 +18526,10 @@ Object.defineProperty(exports, "delay", ({
     enumerable: true,
     get: function () { return coreUtil.delay; }
 }));
+Object.defineProperty(exports, "isNode", ({
+    enumerable: true,
+    get: function () { return coreUtil.isNode; }
+}));
 Object.defineProperty(exports, "isTokenCredential", ({
     enumerable: true,
     get: function () { return coreAuth.isTokenCredential; }
@@ -18575,7 +18569,6 @@ exports.generateUuid = generateUuid;
 exports.getDefaultProxySettings = getDefaultProxySettings;
 exports.getDefaultUserAgentValue = getDefaultUserAgentValue;
 exports.isDuration = isDuration;
-exports.isNode = isNode;
 exports.isValidUuid = isValidUuid;
 exports.keepAlivePolicy = keepAlivePolicy;
 exports.logPolicy = logPolicy;
@@ -62642,14 +62635,14 @@ function wrappy (fn, cb) {
       this.saxParser.onopentag = (function(_this) {
         return function(node) {
           var key, newValue, obj, processedKey, ref;
-          obj = {};
+          obj = Object.create(null);
           obj[charkey] = "";
           if (!_this.options.ignoreAttrs) {
             ref = node.attributes;
             for (key in ref) {
               if (!hasProp.call(ref, key)) continue;
               if (!(attrkey in obj) && !_this.options.mergeAttrs) {
-                obj[attrkey] = {};
+                obj[attrkey] = Object.create(null);
               }
               newValue = _this.options.attrValueProcessors ? processItem(_this.options.attrValueProcessors, node.attributes[key], key) : node.attributes[key];
               processedKey = _this.options.attrNameProcessors ? processItem(_this.options.attrNameProcessors, key) : key;
@@ -62699,7 +62692,11 @@ function wrappy (fn, cb) {
             }
           }
           if (isEmpty(obj)) {
-            obj = _this.options.emptyTag !== '' ? _this.options.emptyTag : emptyStr;
+            if (typeof _this.options.emptyTag === 'function') {
+              obj = _this.options.emptyTag();
+            } else {
+              obj = _this.options.emptyTag !== '' ? _this.options.emptyTag : emptyStr;
+            }
           }
           if (_this.options.validator != null) {
             xpath = "/" + ((function() {
@@ -62723,7 +62720,7 @@ function wrappy (fn, cb) {
           }
           if (_this.options.explicitChildren && !_this.options.mergeAttrs && typeof obj === 'object') {
             if (!_this.options.preserveChildrenOrder) {
-              node = {};
+              node = Object.create(null);
               if (_this.options.attrkey in obj) {
                 node[_this.options.attrkey] = obj[_this.options.attrkey];
                 delete obj[_this.options.attrkey];
@@ -62738,7 +62735,7 @@ function wrappy (fn, cb) {
               obj = node;
             } else if (s) {
               s[_this.options.childkey] = s[_this.options.childkey] || [];
-              objClone = {};
+              objClone = Object.create(null);
               for (key in obj) {
                 if (!hasProp.call(obj, key)) continue;
                 objClone[key] = obj[key];
@@ -62755,7 +62752,7 @@ function wrappy (fn, cb) {
           } else {
             if (_this.options.explicitRoot) {
               old = obj;
-              obj = {};
+              obj = Object.create(null);
               obj[nodeName] = old;
             }
             _this.resultObject = obj;
