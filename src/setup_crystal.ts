@@ -25,7 +25,7 @@ const darwinPostfix = "-darwin-universal.tar.gz";
 const linuxPostfix = "-linux-x86_64.tar.gz";
 
 async function getInstallAsset(
-    option: Option
+    option: Option,
 ): Promise<ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem> {
     const client = github.getOctokit(option.githubToken);
     let response: ReposGetReleaseByTagResponse | ReposGetLatestReleaseResponse;
@@ -84,7 +84,7 @@ export function toVersion(name: string): string {
 }
 
 function getChildFolder(
-    asset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem
+    asset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem,
 ): string {
     return asset.name.replace(oldDarwinPostfix, "").replace(darwinPostfix, "").replace(linuxPostfix, "");
 }
@@ -107,7 +107,7 @@ export async function installCrystal(option: Option): Promise<string> {
 
 async function installCrystalToUseToolCache(
     installAsset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem,
-    version: string
+    version: string,
 ): Promise<string> {
     let toolPath = tc.find("crystal", version);
     if (!toolPath) {
@@ -129,7 +129,7 @@ async function installCrystalToUseToolCache(
 async function installCrystalToTemp(
     installAsset: ReposGetReleaseByTagResponseAssetsItem | ReposGetLatestReleaseResponseAssetsItem,
     version: string,
-    option: Option
+    option: Option,
 ): Promise<string> {
     if (option.installRoot == null) {
         throw new Error("install root is null");

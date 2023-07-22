@@ -86,7 +86,7 @@ export async function installShards(option: Option, crystalInstalledPath: string
 async function installShardsToToolCache(
     installAsset: ReposGetReleaseByTag | ReposGetLatestRelease,
     crystalInstalledPath: string,
-    option: Option
+    option: Option,
 ) {
     await installNeedSoftware();
 
@@ -124,7 +124,7 @@ async function installShardsToToolCache(
 async function installShardsToTemp(
     installAsset: ReposGetReleaseByTag | ReposGetLatestRelease,
     crystalInstalledPath: string,
-    option: Option
+    option: Option,
 ) {
     if (option.installRoot == null) {
         throw new Error("install root is null");
