@@ -15,7 +15,7 @@
     "license": "MIT",
     "devDependencies": {
         "@octokit/types": "^11.1.0",
-        "@types/jest": "^29.5.7",
+        "@types/jest": "^29.5.8",
         "@types/node": "^20.8.10",
         "@types/semver": "^7.5.5",
         "@typescript-eslint/eslint-plugin": "^6.10.0",
