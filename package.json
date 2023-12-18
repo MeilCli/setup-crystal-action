@@ -14,7 +14,7 @@
     "author": "",
     "license": "MIT",
     "devDependencies": {
-        "@octokit/types": "^11.1.0",
+        "@octokit/types": "^12.4.0",
         "@types/jest": "^29.5.11",
         "@types/node": "^20.10.5",
         "@types/semver": "^7.5.6",
